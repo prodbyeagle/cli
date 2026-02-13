@@ -42,3 +42,25 @@ pub fn run_capture(program: &str, args: &[&str]) -> anyhow::Result<String> {
 	}
 	Ok(String::from_utf8_lossy(&out.stdout).trim().to_string())
 }
+
+/// Escapes a string for use inside a single-quoted PowerShell string literal.
+pub fn escape_powershell_single_quoted(value: &str) -> String {
+	value.replace('\'', "''")
+}
+
+/// Spawns a hidden PowerShell process that executes the given command string.
+pub fn spawn_powershell_hidden(command: &str) -> anyhow::Result<()> {
+	Command::new("powershell")
+		.args([
+			"-NoProfile",
+			"-ExecutionPolicy",
+			"Bypass",
+			"-WindowStyle",
+			"Hidden",
+			"-Command",
+			command,
+		])
+		.spawn()?;
+
+	Ok(())
+}

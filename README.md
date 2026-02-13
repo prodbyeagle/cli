@@ -1,6 +1,8 @@
 A lightweight native CLI (Rust) to automate a few personal workflows
 (Spicetify, EagleCord, project templates, Minecraft server launcher, etc.).
 
+Windows-only CLI.
+
 ## Install (Windows)
 
 ```powershell
@@ -27,6 +29,15 @@ eagle minecraft
 # Create a new server
 eagle minecraft create --name my-server --type paper --version 1.21.4
 ```
+
+### Create
+
+`eagle create` defaults to `%USERPROFILE%\Development\.YY`.
+
+You can override the base root with:
+
+- `--root C:\some\path`
+- `%EAGLE_CREATE_ROOT%`
 
 ## Dev
 

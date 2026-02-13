@@ -6,6 +6,7 @@ use dialoguer::{Input, Select};
 use super::fabric;
 use super::fs;
 use super::paper;
+use crate::ui;
 
 pub(super) fn build_command() -> Command {
 	Command::new("create")
@@ -138,16 +139,20 @@ pub(super) fn run_create(matches: &ArgMatches) -> anyhow::Result<()> {
 				fabric::download_fabric_server(&version, &jar_path)?
 			}
 		}
+	} else {
+		ui::warning(
+			"Skipping jar download. This server will not start until server.jar exists.",
+		);
 	}
 
-	println!(
+	ui::success(&format!(
 		"Created server: {} ({}, {})",
 		server_dir.display(),
 		server_type.as_str(),
 		format_version_label(&version_input, &version),
-	);
-	println!("Port: {port}");
-	println!("Motd: {motd}");
+	));
+	ui::muted(&format!("Port: {port}"));
+	ui::muted(&format!("Motd: {motd}"));
 
 	guard.commit();
 	Ok(())
