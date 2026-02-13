@@ -2,6 +2,7 @@ use clap::{ArgMatches, Command};
 
 use crate::commands::CommandSpec;
 use crate::context::Context;
+use crate::ui;
 
 fn build() -> Command {
 	Command::new("version")
@@ -10,8 +11,8 @@ fn build() -> Command {
 }
 
 fn run(_: &ArgMatches, ctx: &Context) -> anyhow::Result<()> {
-	println!("eagle {}", ctx.version);
-	println!("{}", ctx.repo_url);
+	ui::success(&format!("eagle {}", ctx.version));
+	ui::muted(ctx.repo_url);
 	Ok(())
 }
 

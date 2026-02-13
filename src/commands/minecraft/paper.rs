@@ -1,9 +1,11 @@
+use std::cmp::Ordering;
 use std::collections::HashMap;
 use std::path::Path;
 
 use serde::Deserialize;
 
 use crate::net;
+use crate::ui;
 
 /// Minimal shape of `GET https://fill.papermc.io/v3/projects/paper`.
 #[derive(Debug, Clone, Deserialize)]
@@ -12,6 +14,7 @@ struct FillProjectIndex {
 }
 
 pub(super) fn resolve_paper_version(version: &str) -> anyhow::Result<String> {
+	let version = version.trim();
 	if !looks_like_family_key(version) {
 		return Ok(version.to_string());
 	}
@@ -48,11 +51,29 @@ fn looks_like_family_key(s: &str) -> bool {
 }
 
 fn pick_best_version_for_family(versions: &[String]) -> Option<&str> {
-	versions
+	let stable_max = versions
 		.iter()
-		.find(|v| !v.contains('-'))
-		.or_else(|| versions.first())
-		.map(|s| s.as_str())
+		.filter(|v| !v.contains('-'))
+		.max_by(|a, b| cmp_numeric_dotted(a, b));
+
+	stable_max.or_else(|| versions.first()).map(|s| s.as_str())
+}
+
+fn cmp_numeric_dotted(a: &str, b: &str) -> Ordering {
+	let pa = a.split('.').collect::<Vec<_>>();
+	let pb = b.split('.').collect::<Vec<_>>();
+	let max_len = pa.len().max(pb.len());
+
+	for idx in 0..max_len {
+		let av = pa.get(idx).and_then(|p| p.parse::<u32>().ok()).unwrap_or(0);
+		let bv = pb.get(idx).and_then(|p| p.parse::<u32>().ok()).unwrap_or(0);
+		match av.cmp(&bv) {
+			Ordering::Equal => continue,
+			other => return other,
+		}
+	}
+
+	Ordering::Equal
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -78,7 +99,7 @@ pub(super) fn download_paper_server(
 	version: &str,
 	jar_path: &Path,
 ) -> anyhow::Result<()> {
-	println!("Downloading Paper {version}...");
+	ui::info(&format!("Downloading Paper {version}..."));
 
 	let url = format!(
 		"https://fill.papermc.io/v3/projects/paper/versions/{version}/builds"
@@ -97,12 +118,16 @@ pub(super) fn download_paper_server(
 		.get("server:default")
 		.ok_or_else(|| anyhow::anyhow!("Missing Paper server download"))?;
 
-	println!(
+	ui::muted(&format!(
 		"Build {}: {} (sha256 {})",
 		best.id, download.name, download.checksums.sha256
-	);
+	));
 
-	net::download_to_file(&download.url, jar_path)?;
+	net::download_to_file_with_sha256(
+		&download.url,
+		jar_path,
+		&download.checksums.sha256,
+	)?;
 	Ok(())
 }
 
@@ -132,10 +157,20 @@ mod tests {
 	fn pick_best_version_prefers_non_prerelease() {
 		let versions = vec![
 			"1.21.11-rc3".to_string(),
-			"1.21.11".to_string(),
 			"1.21.10".to_string(),
+			"1.21.11".to_string(),
 		];
 		assert_eq!(pick_best_version_for_family(&versions), Some("1.21.11"));
+	}
+
+	#[test]
+	fn pick_best_version_chooses_highest_stable() {
+		let versions = vec![
+			"1.21.2".to_string(),
+			"1.21.12".to_string(),
+			"1.21.9".to_string(),
+		];
+		assert_eq!(pick_best_version_for_family(&versions), Some("1.21.12"));
 	}
 
 	#[test]

@@ -2,6 +2,7 @@ mod cli;
 mod commands;
 mod context;
 mod net;
+mod ui;
 mod util;
 
 use clap::error::ErrorKind;
@@ -10,7 +11,7 @@ use crate::context::Context;
 
 fn main() {
 	if let Err(err) = run() {
-		eprintln!("{err}");
+		crate::ui::error(&format!("{err}"));
 		std::process::exit(1);
 	}
 }

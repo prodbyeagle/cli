@@ -3,6 +3,8 @@ use dialoguer::Confirm;
 
 use crate::commands::CommandSpec;
 use crate::context::Context;
+use crate::ui;
+use crate::util;
 
 fn build() -> Command {
 	Command::new("uninstall")
@@ -37,12 +39,14 @@ fn run(matches: &ArgMatches, ctx: &Context) -> anyhow::Result<()> {
 			.default(false)
 			.interact()?;
 		if !confirmed {
+			ui::muted("Uninstall canceled.");
 			return Ok(());
 		}
 	}
 
 	let pid = std::process::id();
-	let exe_path = ctx.exe_path.to_string_lossy().to_string();
+	let exe_path =
+		util::escape_powershell_single_quoted(&ctx.exe_path.to_string_lossy());
 
 	let script = format!(
 		"Wait-Process -Id {pid}; \
@@ -54,19 +58,11 @@ if (Test-Path $PROFILE) {{ \
 }}"
 	);
 
-	std::process::Command::new("powershell")
-		.args([
-			"-NoProfile",
-			"-ExecutionPolicy",
-			"Bypass",
-			"-WindowStyle",
-			"Hidden",
-			"-Command",
-			&script,
-		])
-		.spawn()?;
+	util::spawn_powershell_hidden(&script)?;
 
-	println!("Uninstall scheduled. Close this shell if eagle is still in use.");
+	ui::success(
+		"Uninstall scheduled. Close this shell if eagle is still in use.",
+	);
 	Ok(())
 }
 

@@ -26,7 +26,10 @@ pub(super) fn find_servers(root: &Path) -> anyhow::Result<Vec<PathBuf>> {
 			continue;
 		}
 
-		if path.join("server.jar").exists() {
+		let has_jar = path.join("server.jar").exists();
+		let has_config = path.join("server.properties").exists()
+			|| path.join("eula.txt").exists();
+		if has_jar || has_config {
 			out.push(path);
 		}
 	}

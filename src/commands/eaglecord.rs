@@ -4,6 +4,7 @@ use clap::{Arg, ArgMatches, Command};
 
 use crate::commands::CommandSpec;
 use crate::context::Context;
+use crate::ui;
 use crate::util;
 
 fn build() -> Command {
@@ -50,14 +51,15 @@ fn run_impl(reinstall: bool) -> anyhow::Result<()> {
 	std::fs::create_dir_all(&temp_root)?;
 
 	if reinstall && clone_dir.exists() {
-		println!("Reinstall: removing {}", clone_dir.display());
+		ui::warning(&format!("Reinstall: removing {}", clone_dir.display()));
 		std::fs::remove_dir_all(&clone_dir)?;
 	}
 
 	if clone_dir.exists() {
+		ensure_repo_clean(&clone_dir)?;
 		update_repo(repo_url, &clone_dir)?;
 	} else {
-		println!("Cloning repo...");
+		ui::info("Cloning repo...");
 		let status = std::process::Command::new("git")
 			.arg("clone")
 			.arg(repo_url)
@@ -78,20 +80,20 @@ fn run_impl(reinstall: bool) -> anyhow::Result<()> {
 
 	let discord_types = clone_dir.join(r"packages\discord-types");
 	if discord_types.exists() {
-		println!("Linking @vencord/discord-types...");
+		ui::info("Linking @vencord/discord-types...");
 		run_bun_in_dir(&bun, &discord_types, &["link"])?;
 	}
 
-	println!("Installing dependencies...");
+	ui::info("Installing dependencies...");
 	run_bun_in_dir(&bun, &clone_dir, &["install"])?;
 
-	println!("Building...");
+	ui::info("Building...");
 	run_bun_in_dir(&bun, &clone_dir, &["run", "build"])?;
 
-	println!("Injecting...");
+	ui::info("Injecting...");
 	run_bun_in_dir(&bun, &clone_dir, &["inject"])?;
 
-	println!("EagleCord complete.");
+	ui::success("EagleCord complete.");
 	Ok(())
 }
 
@@ -106,19 +108,44 @@ fn ensure_bun() -> anyhow::Result<PathBuf> {
 		return Ok(path);
 	}
 
-	println!("Bun not found. Installing Bun...");
-	let status = util::run_inherit(
-		"powershell",
+	if which::which("winget").is_err() {
+		anyhow::bail!(
+			"bun not found and winget is unavailable. Install Bun manually."
+		);
+	}
+
+	ui::info("Bun not found. Installing with winget...");
+	let install_status = util::run_inherit(
+		"winget",
 		&[
-			"-NoProfile",
-			"-ExecutionPolicy",
-			"Bypass",
-			"-Command",
-			"irm bun.sh/install.ps1 | iex",
+			"install",
+			"--id",
+			"Oven-sh.Bun",
+			"--exact",
+			"--accept-package-agreements",
+			"--accept-source-agreements",
+			"--disable-interactivity",
 		],
 	)?;
-	if !status.success() {
-		anyhow::bail!("Bun install failed");
+	if !install_status.success() {
+		ui::warning("Bun install did not succeed, trying winget upgrade...");
+		let upgrade_status = util::run_inherit(
+			"winget",
+			&[
+				"upgrade",
+				"--id",
+				"Oven-sh.Bun",
+				"--exact",
+				"--accept-package-agreements",
+				"--accept-source-agreements",
+				"--disable-interactivity",
+			],
+		)?;
+		if !upgrade_status.success() {
+			anyhow::bail!(
+				"Bun install/upgrade failed (install: {install_status}, upgrade: {upgrade_status})"
+			);
+		}
 	}
 
 	if let Ok(path) = which::which("bun") {
@@ -137,6 +164,20 @@ fn ensure_bun() -> anyhow::Result<PathBuf> {
 	anyhow::bail!("bun still not found after install")
 }
 
+fn ensure_repo_clean(dir: &Path) -> anyhow::Result<()> {
+	let dir_s = dir.to_string_lossy().to_string();
+	let dirty =
+		util::run_capture("git", &["-C", &dir_s, "status", "--porcelain"])?;
+	if dirty.trim().is_empty() {
+		return Ok(());
+	}
+
+	anyhow::bail!(
+		"Repo has local changes at {}. Re-run with --reinstall to replace it.",
+		dir.display()
+	);
+}
+
 fn update_repo(repo_url: &str, dir: &Path) -> anyhow::Result<()> {
 	let dir_s = dir.to_string_lossy().to_string();
 	let local = util::run_capture("git", &["-C", &dir_s, "rev-parse", "HEAD"])?;
@@ -144,22 +185,20 @@ fn update_repo(repo_url: &str, dir: &Path) -> anyhow::Result<()> {
 
 	let remote_hash = remote.split('\t').next().unwrap_or("").trim();
 	if local.trim() == remote_hash {
-		println!("Repo is up-to-date ({})", local.trim());
+		ui::muted(&format!("Repo is up-to-date ({})", local.trim()));
 		return Ok(());
 	}
 
-	println!("Updating repo...");
+	ui::info("Updating repo...");
 	let status = util::run_inherit("git", &["-C", &dir_s, "fetch", "origin"])?;
 	if !status.success() {
 		anyhow::bail!("git fetch failed");
 	}
 
-	let status = util::run_inherit(
-		"git",
-		&["-C", &dir_s, "reset", "--hard", "origin/main"],
-	)?;
+	let status =
+		util::run_inherit("git", &["-C", &dir_s, "pull", "--ff-only"])?;
 	if !status.success() {
-		anyhow::bail!("git reset failed");
+		anyhow::bail!("git pull --ff-only failed");
 	}
 
 	Ok(())

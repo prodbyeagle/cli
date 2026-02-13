@@ -9,10 +9,10 @@ $scriptsRoot = 'C:\Scripts'
 $installExe = Join-Path $scriptsRoot 'eagle.exe'
 
 $releaseExeUrl = `
-	'https://github.com/prodbyeagle/eaglePowerShell/releases/latest/download/eagle.exe'
+	'https://github.com/prodbyeagle/cli/releases/latest/download/eagle.exe'
 
 $sourceZipUrl = `
-	'https://github.com/prodbyeagle/eaglePowerShell/archive/refs/heads/main.zip'
+	'https://github.com/prodbyeagle/cli/archive/refs/heads/main.zip'
 
 $tempZipPath = Join-Path $env:TEMP 'eagle_install.zip'
 $tempExtractPath = Join-Path $env:TEMP 'eagle_install'

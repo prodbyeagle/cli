@@ -4,8 +4,13 @@ use clap::ArgMatches;
 use dialoguer::Select;
 
 use super::fs;
+use crate::ui;
 
 pub(super) fn run_start(matches: &ArgMatches) -> anyhow::Result<()> {
+	if which::which("java").is_err() {
+		anyhow::bail!("java not found in PATH");
+	}
+
 	let ram_mb = *matches.get_one::<u32>("ram_mb").unwrap_or(&8192);
 
 	let root = fs::servers_root()?;
@@ -17,10 +22,15 @@ pub(super) fn run_start(matches: &ArgMatches) -> anyhow::Result<()> {
 	let items: Vec<String> = servers
 		.iter()
 		.map(|p| {
-			p.file_name()
+			let mut name = p
+				.file_name()
 				.and_then(|s| s.to_str())
 				.unwrap_or("server")
-				.to_string()
+				.to_string();
+			if !p.join("server.jar").exists() {
+				name.push_str(" (missing server.jar)");
+			}
+			name
 		})
 		.collect();
 
@@ -33,7 +43,10 @@ pub(super) fn run_start(matches: &ArgMatches) -> anyhow::Result<()> {
 	let server_path = &servers[selection];
 	let jar_path = server_path.join("server.jar");
 	if !jar_path.exists() {
-		anyhow::bail!("server.jar not found: {}", jar_path.display());
+		anyhow::bail!(
+			"server.jar not found for '{}'. Recreate without --skip-download or place a jar manually.",
+			items[selection]
+		);
 	}
 
 	crossterm::execute!(
@@ -57,7 +70,7 @@ pub(super) fn run_start(matches: &ArgMatches) -> anyhow::Result<()> {
 		anyhow::bail!("java exited with: {status}");
 	}
 
-	println!("Server stopped.");
+	ui::success("Server stopped.");
 	Ok(())
 }
 
