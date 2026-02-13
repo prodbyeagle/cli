@@ -10,7 +10,7 @@ use crate::ui;
 use crate::util;
 
 const RELEASE_API_URL: &str =
-	"https://api.github.com/repos/prodbyeagle/eaglePowerShell/releases/latest";
+	"https://api.github.com/repos/prodbyeagle/cli/releases/latest";
 
 #[derive(Debug, Deserialize)]
 struct GithubRelease {

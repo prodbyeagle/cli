@@ -7,7 +7,7 @@ Windows-only CLI.
 
 ```powershell
 Invoke-WebRequest -UseBasicParsing `
-	https://raw.githubusercontent.com/prodbyeagle/eaglePowerShell/main/installer.ps1 |
+	https://raw.githubusercontent.com/prodbyeagle/cli/main/installer.ps1 |
 	Invoke-Expression
 ```
 

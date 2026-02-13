@@ -22,7 +22,7 @@ impl Context {
 			exe_path,
 			exe_dir,
 			version: env!("CARGO_PKG_VERSION"),
-			repo_url: "https://github.com/prodbyeagle/eaglePowerShell",
+			repo_url: "https://github.com/prodbyeagle/cli",
 		})
 	}
 }

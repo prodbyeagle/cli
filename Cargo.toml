@@ -30,4 +30,4 @@ codegen-units = 1
 panic = 'abort'
 
 [package.metadata]
-repository = 'https://github.com/prodbyeagle/eaglePowerShell'
+repository = 'https://github.com/prodbyeagle/cli'
