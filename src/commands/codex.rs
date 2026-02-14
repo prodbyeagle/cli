@@ -10,7 +10,7 @@ const CODEX_WORKDIR: &str = r"D:\development\.26\eagle";
 
 fn build() -> Command {
 	Command::new("codex").about(
-		"Launch codex --yolo in a PowerShell terminal at D:\\development\\.26\\eagle",
+		"Launch codex --yolo in a PowerShell 7 terminal at D:\\development\\.26\\eagle",
 	)
 }
 
@@ -25,11 +25,15 @@ fn run(_: &ArgMatches, _: &Context) -> anyhow::Result<()> {
 	}
 
 	if which::which("wt").is_ok() {
+		if which::which("pwsh").is_err() {
+			anyhow::bail!("pwsh (PowerShell 7) not found in PATH");
+		}
+
 		std::process::Command::new("wt")
 			.args([
 				"-d",
 				CODEX_WORKDIR,
-				"powershell",
+				"pwsh",
 				"-NoExit",
 				"-Command",
 				"codex --yolo",
@@ -38,21 +42,27 @@ fn run(_: &ArgMatches, _: &Context) -> anyhow::Result<()> {
 			.stdout(Stdio::null())
 			.stderr(Stdio::null())
 			.spawn()?;
-		ui::success("Opened Windows Terminal (PowerShell) with: codex --yolo");
+		ui::success(
+			"Opened Windows Terminal (PowerShell 7) with: codex --yolo",
+		);
 		return Ok(());
 	}
 
-	ui::warning("Windows Terminal (wt) not found, running in current shell.");
-	let status = std::process::Command::new("codex")
+	if which::which("pwsh").is_err() {
+		anyhow::bail!("pwsh (PowerShell 7) not found in PATH");
+	}
+
+	ui::warning("Windows Terminal (wt) not found, launching PowerShell 7 here.");
+	let status = std::process::Command::new("pwsh")
 		.current_dir(workdir)
-		.arg("--yolo")
+		.args(["-NoExit", "-Command", "codex --yolo"])
 		.stdin(Stdio::inherit())
 		.stdout(Stdio::inherit())
 		.stderr(Stdio::inherit())
 		.status()?;
 
 	if !status.success() {
-		anyhow::bail!("codex --yolo failed: {status}");
+		anyhow::bail!("pwsh codex --yolo failed: {status}");
 	}
 
 	Ok(())

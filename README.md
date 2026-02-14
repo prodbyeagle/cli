@@ -45,7 +45,7 @@ You can override the base root with:
 eagle codex
 ```
 
-Opens a Windows Terminal session in `D:\development\.26\eagle` and runs:
+Opens a Windows Terminal PowerShell 7 session in `D:\development\.26\eagle` and runs:
 `codex --yolo`.
 
 ## Dev
