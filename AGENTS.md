@@ -64,3 +64,6 @@ Refer to Rust's async book and `tokio` documentation for in-depth information on
 * Always commit the made changes
 * Always use Conventional Commits Naming Schema
 * Always create an new branch so that the main branch stays safe
+* Always run `cargo fmt` before committing
+* Always run `cargo test` before committing
+* Always push commits directly after committing so changes are already uploaded

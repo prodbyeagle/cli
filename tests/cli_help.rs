@@ -24,3 +24,12 @@ fn minecraft_create_help_succeeds() {
 		.success()
 		.stdout(contains("--skip-download"));
 }
+
+#[test]
+fn codex_help_succeeds() {
+	let mut cmd = cargo_bin_cmd!("eagle");
+	cmd.args(["help", "codex"])
+		.assert()
+		.success()
+		.stdout(contains("codex --yolo"));
+}
