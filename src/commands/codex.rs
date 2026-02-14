@@ -10,7 +10,7 @@ const CODEX_WORKDIR: &str = r"D:\development\.26\eagle";
 
 fn build() -> Command {
 	Command::new("codex").about(
-		"Launch codex --yolo in a Windows Terminal session at D:\\development\\.26\\eagle",
+		"Launch codex --yolo in a PowerShell terminal at D:\\development\\.26\\eagle",
 	)
 }
 
@@ -26,12 +26,19 @@ fn run(_: &ArgMatches, _: &Context) -> anyhow::Result<()> {
 
 	if which::which("wt").is_ok() {
 		std::process::Command::new("wt")
-			.args(["-d", CODEX_WORKDIR, "codex", "--yolo"])
+			.args([
+				"-d",
+				CODEX_WORKDIR,
+				"powershell",
+				"-NoExit",
+				"-Command",
+				"codex --yolo",
+			])
 			.stdin(Stdio::null())
 			.stdout(Stdio::null())
 			.stderr(Stdio::null())
 			.spawn()?;
-		ui::success("Opened Windows Terminal with: codex --yolo");
+		ui::success("Opened Windows Terminal (PowerShell) with: codex --yolo");
 		return Ok(());
 	}
 
