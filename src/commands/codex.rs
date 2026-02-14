@@ -52,7 +52,9 @@ fn run(_: &ArgMatches, _: &Context) -> anyhow::Result<()> {
 		anyhow::bail!("pwsh (PowerShell 7) not found in PATH");
 	}
 
-	ui::warning("Windows Terminal (wt) not found, launching PowerShell 7 here.");
+	ui::warning(
+		"Windows Terminal (wt) not found, launching PowerShell 7 here.",
+	);
 	let status = std::process::Command::new("pwsh")
 		.current_dir(workdir)
 		.args(["-NoExit", "-Command", "codex --yolo"])
