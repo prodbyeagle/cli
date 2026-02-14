@@ -13,6 +13,7 @@ pub fn iter_specs() -> inventory::iter<CommandSpec> {
 	inventory::iter::<CommandSpec>
 }
 
+pub mod codex;
 pub mod create;
 pub mod eaglecord;
 pub mod help;
