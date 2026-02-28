@@ -14,6 +14,7 @@ const RELEASE_API_URL: &str =
 
 #[derive(Debug, Deserialize)]
 struct GithubRelease {
+	tag_name: String,
 	assets: Vec<GithubAsset>,
 }
 
@@ -24,11 +25,14 @@ struct GithubAsset {
 	digest: Option<String>,
 }
 
-fn latest_eagle_asset() -> anyhow::Result<GithubAsset> {
-	let release = net::get_json::<GithubRelease>(RELEASE_API_URL)?;
+fn latest_release() -> anyhow::Result<GithubRelease> {
+	net::get_json::<GithubRelease>(RELEASE_API_URL)
+}
+
+fn latest_eagle_asset(release: &GithubRelease) -> anyhow::Result<&GithubAsset> {
 	release
 		.assets
-		.into_iter()
+		.iter()
 		.find(|asset| asset.name.eq_ignore_ascii_case("eagle.exe"))
 		.ok_or_else(|| {
 			anyhow::anyhow!("Latest release does not include eagle.exe")
@@ -53,15 +57,23 @@ fn run(matches: &ArgMatches, ctx: &Context) -> anyhow::Result<()> {
 		anyhow::bail!("Refusing to self-update a dev binary. Use --force.");
 	}
 
-	let asset = latest_eagle_asset()?;
+	let release = latest_release()?;
+	let latest_version = release.tag_name.trim_start_matches('v');
+
+	if latest_version == ctx.version {
+		ui::success(&format!("Already up to date (v{})", ctx.version));
+		return Ok(());
+	}
+
+	let asset = latest_eagle_asset(&release)?;
 	let digest = asset.digest.as_deref().ok_or_else(|| {
 		anyhow::anyhow!("Release asset is missing sha256 digest")
 	})?;
 
 	let new_path = ctx.exe_dir.join("eagle.new.exe");
 	ui::info(&format!(
-		"Downloading update: {}",
-		asset.browser_download_url
+		"Updating eagle v{} → v{latest_version}",
+		ctx.version
 	));
 	net::download_to_file_with_sha256(
 		&asset.browser_download_url,
