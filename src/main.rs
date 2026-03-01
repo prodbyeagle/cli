@@ -54,15 +54,13 @@ fn run() -> anyhow::Result<()> {
 				sub.get_all_aliases().map(|a| a.to_string()).collect();
 			std::iter::once(name).chain(aliases)
 		})
-		.filter(|candidate| {
-			crate::util::levenshtein(sub_name, candidate) <= 3
-		})
-		.min_by_key(|candidate| {
-			crate::util::levenshtein(sub_name, candidate)
-		});
+		.filter(|candidate| crate::util::levenshtein(sub_name, candidate) <= 3)
+		.min_by_key(|candidate| crate::util::levenshtein(sub_name, candidate));
 
 	let msg = match suggestion {
-		Some(s) => format!("unknown command: {sub_name}\n\n  Did you mean: {s}?"),
+		Some(s) => {
+			format!("unknown command: {sub_name}\n\n  Did you mean: {s}?")
+		}
 		None => format!("unknown command: {sub_name}"),
 	};
 
