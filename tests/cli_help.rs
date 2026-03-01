@@ -53,12 +53,12 @@ fn update_help_succeeds() {
 }
 
 #[test]
-fn minecraft_start_help_succeeds() {
+fn minecraft_help_shows_ram_flag() {
 	let mut cmd = cargo_bin_cmd!("eagle");
-	cmd.args(["minecraft", "start", "--help"])
+	cmd.args(["minecraft", "--help"])
 		.assert()
 		.success()
-		.stdout(contains("--ram"));
+		.stdout(contains("--ram-mb"));
 }
 
 #[test]
