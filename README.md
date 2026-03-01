@@ -39,15 +39,6 @@ You can override the base root with:
 - `--root C:\some\path`
 - `%EAGLE_CREATE_ROOT%`
 
-### Codex
-
-```powershell
-eagle codex
-```
-
-Opens a Windows Terminal PowerShell 7 session in `D:\development\.26\eagle` and runs:
-`codex --yolo`.
-
 ## Dev
 
 ```powershell
