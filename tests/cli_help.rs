@@ -33,3 +33,54 @@ fn codex_help_succeeds() {
 		.success()
 		.stdout(contains("codex --yolo"));
 }
+
+#[test]
+fn create_help_succeeds() {
+	let mut cmd = cargo_bin_cmd!("eagle");
+	cmd.args(["create", "--help"])
+		.assert()
+		.success()
+		.stdout(contains("--template"));
+}
+
+#[test]
+fn update_help_succeeds() {
+	let mut cmd = cargo_bin_cmd!("eagle");
+	cmd.args(["update", "--help"])
+		.assert()
+		.success()
+		.stdout(contains("--force"));
+}
+
+#[test]
+fn minecraft_help_shows_ram_flag() {
+	let mut cmd = cargo_bin_cmd!("eagle");
+	cmd.args(["minecraft", "--help"])
+		.assert()
+		.success()
+		.stdout(contains("--ram-mb"));
+}
+
+#[test]
+fn help_flag_succeeds() {
+	let mut cmd = cargo_bin_cmd!("eagle");
+	cmd.arg("--help")
+		.assert()
+		.success()
+		.stdout(contains("eagle"));
+}
+
+#[test]
+fn unknown_subcommand_fails() {
+	let mut cmd = cargo_bin_cmd!("eagle");
+	cmd.arg("notacommand").assert().failure();
+}
+
+#[test]
+fn version_output_contains_version_number() {
+	let mut cmd = cargo_bin_cmd!("eagle");
+	cmd.arg("version")
+		.assert()
+		.success()
+		.stdout(contains("3.2.0"));
+}
