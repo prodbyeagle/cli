@@ -4,10 +4,10 @@ use crate::commands::CommandSpec;
 use crate::context::Context;
 
 mod create;
-mod fabric;
-mod fs;
-mod paper;
-mod start;
+pub mod fabric;
+pub mod fs;
+pub mod paper;
+pub mod start;
 
 fn build() -> Command {
 	Command::new("minecraft")

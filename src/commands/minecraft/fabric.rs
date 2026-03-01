@@ -8,23 +8,23 @@ use crate::ui;
 
 /// Minimal shape of `GET https://meta.fabricmc.net/v2/versions/loader/{game_version}`.
 #[derive(Debug, Clone, Deserialize)]
-struct LoaderCombo {
-	loader: LoaderPart,
-	installer: InstallerPart,
+pub struct LoaderCombo {
+	pub loader: LoaderPart,
+	pub installer: InstallerPart,
 }
 
 #[derive(Debug, Clone, Deserialize)]
-struct LoaderPart {
-	version: String,
+pub struct LoaderPart {
+	pub version: String,
 	#[serde(default)]
-	stable: Option<bool>,
+	pub stable: Option<bool>,
 }
 
 #[derive(Debug, Clone, Deserialize)]
-struct InstallerPart {
-	version: String,
+pub struct InstallerPart {
+	pub version: String,
 	#[serde(default)]
-	stable: Option<bool>,
+	pub stable: Option<bool>,
 }
 
 pub(super) fn download_fabric_server(
@@ -66,7 +66,8 @@ fn fetch_optional_sha256_for_url(url: &str) -> Option<String> {
 	parse_sha256_token(&text)
 }
 
-fn parse_sha256_token(text: &str) -> Option<String> {
+#[doc(hidden)]
+pub fn parse_sha256_token(text: &str) -> Option<String> {
 	text.split_whitespace()
 		.find(|token| {
 			token.len() == 64 && token.chars().all(|c| c.is_ascii_hexdigit())
@@ -74,7 +75,8 @@ fn parse_sha256_token(text: &str) -> Option<String> {
 		.map(|token| token.to_ascii_lowercase())
 }
 
-fn pick_best_combo(combos: &[LoaderCombo]) -> Option<&LoaderCombo> {
+#[doc(hidden)]
+pub fn pick_best_combo(combos: &[LoaderCombo]) -> Option<&LoaderCombo> {
 	let stable_max = combos
 		.iter()
 		.filter(|c| {
@@ -110,97 +112,4 @@ fn cmp_numeric_dotted(a: &str, b: &str) -> Ordering {
 	}
 
 	Ordering::Equal
-}
-
-#[cfg(test)]
-mod tests {
-	use super::*;
-
-	#[test]
-	fn picks_stable_combo_when_available() {
-		let combos = vec![
-			LoaderCombo {
-				loader: LoaderPart {
-					version: "0.16.0".to_string(),
-					stable: Some(false),
-				},
-				installer: InstallerPart {
-					version: "1.0.0".to_string(),
-					stable: Some(true),
-				},
-			},
-			LoaderCombo {
-				loader: LoaderPart {
-					version: "0.15.0".to_string(),
-					stable: Some(true),
-				},
-				installer: InstallerPart {
-					version: "1.0.0".to_string(),
-					stable: Some(true),
-				},
-			},
-		];
-
-		let best = pick_best_combo(&combos).unwrap();
-		assert_eq!(best.loader.version, "0.15.0");
-	}
-
-	#[test]
-	fn falls_back_to_first_combo() {
-		let combos = vec![LoaderCombo {
-			loader: LoaderPart {
-				version: "0.16.0".to_string(),
-				stable: Some(false),
-			},
-			installer: InstallerPart {
-				version: "1.0.0".to_string(),
-				stable: Some(false),
-			},
-		}];
-
-		let best = pick_best_combo(&combos).unwrap();
-		assert_eq!(best.loader.version, "0.16.0");
-	}
-
-	#[test]
-	fn picks_highest_stable_combo() {
-		let combos = vec![
-			LoaderCombo {
-				loader: LoaderPart {
-					version: "0.15.0".to_string(),
-					stable: Some(true),
-				},
-				installer: InstallerPart {
-					version: "1.0.0".to_string(),
-					stable: Some(true),
-				},
-			},
-			LoaderCombo {
-				loader: LoaderPart {
-					version: "0.18.4".to_string(),
-					stable: Some(true),
-				},
-				installer: InstallerPart {
-					version: "1.1.1".to_string(),
-					stable: Some(true),
-				},
-			},
-		];
-
-		let best = pick_best_combo(&combos).unwrap();
-		assert_eq!(best.loader.version, "0.18.4");
-		assert_eq!(best.installer.version, "1.1.1");
-	}
-
-	#[test]
-	fn checksum_parser_accepts_hex_token() {
-		let txt = "1fc96c67f56be0e22fceff43a111b9c354f051cc1fc858599896c5887befc0c3  server.jar";
-		let parsed = parse_sha256_token(txt);
-		assert_eq!(
-			parsed.as_deref(),
-			Some(
-				"1fc96c67f56be0e22fceff43a111b9c354f051cc1fc858599896c5887befc0c3"
-			)
-		);
-	}
 }

@@ -98,7 +98,8 @@ Move-Item -Force '{new_path_s}' '{exe_path}'"
 	Ok(())
 }
 
-fn is_dev_exe(path: &Path) -> bool {
+#[doc(hidden)]
+pub fn is_dev_exe(path: &Path) -> bool {
 	let s = path.to_string_lossy().to_lowercase();
 	s.contains("\\target\\debug\\") || s.contains("\\target\\release\\")
 }
@@ -107,41 +108,5 @@ inventory::submit! {
 	CommandSpec {
 		command: build,
 		run,
-	}
-}
-
-#[cfg(test)]
-mod tests {
-	use super::*;
-
-	#[test]
-	fn dev_debug_path_detected() {
-		assert!(is_dev_exe(Path::new(
-			"C:\\project\\target\\debug\\eagle.exe"
-		)));
-	}
-
-	#[test]
-	fn dev_release_path_detected() {
-		assert!(is_dev_exe(Path::new(
-			"C:\\project\\target\\release\\eagle.exe"
-		)));
-	}
-
-	#[test]
-	fn installed_path_not_dev() {
-		assert!(!is_dev_exe(Path::new("C:\\Users\\user\\bin\\eagle.exe")));
-	}
-
-	#[test]
-	fn path_is_case_insensitive() {
-		assert!(is_dev_exe(Path::new(
-			"C:\\project\\TARGET\\DEBUG\\eagle.exe"
-		)));
-	}
-
-	#[test]
-	fn empty_path_not_dev() {
-		assert!(!is_dev_exe(Path::new("")));
 	}
 }
