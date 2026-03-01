@@ -333,7 +333,8 @@ mod tests {
 
 	#[test]
 	fn normalize_sha256_rejects_correct_length_but_non_hex() {
-		let non_hex = "zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz";
+		let non_hex =
+			"zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz";
 		assert_eq!(non_hex.len(), 64);
 		assert!(normalize_sha256(non_hex).is_err());
 	}

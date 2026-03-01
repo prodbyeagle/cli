@@ -64,7 +64,10 @@ fn minecraft_start_help_succeeds() {
 #[test]
 fn help_flag_succeeds() {
 	let mut cmd = cargo_bin_cmd!("eagle");
-	cmd.arg("--help").assert().success().stdout(contains("eagle"));
+	cmd.arg("--help")
+		.assert()
+		.success()
+		.stdout(contains("eagle"));
 }
 
 #[test]
