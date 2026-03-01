@@ -88,7 +88,7 @@ fn run(matches: &ArgMatches, ctx: &Context) -> anyhow::Result<()> {
 		util::escape_powershell_single_quoted(&new_path.to_string_lossy());
 
 	let script = format!(
-		"Wait-Process -Id {pid}; Start-Sleep -Milliseconds 200; \
+		"Wait-Process -Id {pid} -ErrorAction SilentlyContinue; Start-Sleep -Milliseconds 200; \
 Move-Item -Force '{new_path_s}' '{exe_path}'"
 	);
 
