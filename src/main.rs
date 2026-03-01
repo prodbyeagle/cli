@@ -1,24 +1,16 @@
-mod cli;
-mod commands;
-mod context;
-mod net;
-mod ui;
-mod util;
-
 use clap::error::ErrorKind;
-
-use crate::context::Context;
+use eagle::context::Context;
 
 fn main() {
 	if let Err(err) = run() {
-		crate::ui::error(&format!("{err}"));
+		eagle::ui::error(&format!("{err}"));
 		std::process::exit(1);
 	}
 }
 
 fn run() -> anyhow::Result<()> {
 	let ctx = Context::new()?;
-	let mut cmd = crate::cli::build_cli();
+	let mut cmd = eagle::cli::build_cli();
 
 	let matches = match cmd.clone().try_get_matches() {
 		Ok(m) => m,
@@ -37,14 +29,14 @@ fn run() -> anyhow::Result<()> {
 		cmd.error(ErrorKind::MissingSubcommand, "missing command")
 	})?;
 
-	for spec in crate::commands::iter_specs() {
+	for spec in eagle::commands::iter_specs() {
 		let sub = (spec.command)();
 		if sub.get_name() == sub_name {
 			return (spec.run)(sub_matches, &ctx);
 		}
 	}
 
-	let mut cmd2 = crate::cli::build_cli();
+	let mut cmd2 = eagle::cli::build_cli();
 
 	let suggestion = cmd2
 		.get_subcommands()
@@ -54,8 +46,8 @@ fn run() -> anyhow::Result<()> {
 				sub.get_all_aliases().map(|a| a.to_string()).collect();
 			std::iter::once(name).chain(aliases)
 		})
-		.filter(|candidate| crate::util::levenshtein(sub_name, candidate) <= 3)
-		.min_by_key(|candidate| crate::util::levenshtein(sub_name, candidate));
+		.filter(|candidate| eagle::util::levenshtein(sub_name, candidate) <= 3)
+		.min_by_key(|candidate| eagle::util::levenshtein(sub_name, candidate));
 
 	let msg = match suggestion {
 		Some(s) => {
