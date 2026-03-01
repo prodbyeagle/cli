@@ -82,5 +82,5 @@ fn version_output_contains_version_number() {
 	cmd.arg("version")
 		.assert()
 		.success()
-		.stdout(contains("3.2.0"));
+		.stdout(contains(env!("CARGO_PKG_VERSION")));
 }
