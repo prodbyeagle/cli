@@ -12,7 +12,7 @@ fn stderr_colors() -> bool {
 
 pub fn info(message: &str) {
 	if stdout_colors() {
-		println!("{}", message.cyan());
+		println!("{} {}", "→".cyan(), message.cyan());
 	} else {
 		println!("{message}");
 	}
@@ -20,7 +20,7 @@ pub fn info(message: &str) {
 
 pub fn success(message: &str) {
 	if stdout_colors() {
-		println!("{}", message.green());
+		println!("{} {}", "✓".green(), message.green());
 	} else {
 		println!("{message}");
 	}
@@ -28,7 +28,7 @@ pub fn success(message: &str) {
 
 pub fn warning(message: &str) {
 	if stdout_colors() {
-		println!("{}", message.yellow());
+		println!("{} {}", "!".yellow(), message.yellow());
 	} else {
 		println!("{message}");
 	}
@@ -44,7 +44,7 @@ pub fn muted(message: &str) {
 
 pub fn error(message: &str) {
 	if stderr_colors() {
-		eprintln!("{}", message.red().bold());
+		eprintln!("{} {}", "✗".red().bold(), message.red().bold());
 	} else {
 		eprintln!("{message}");
 	}

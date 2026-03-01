@@ -45,10 +45,24 @@ fn run() -> anyhow::Result<()> {
 	}
 
 	let mut cmd2 = crate::cli::build_cli();
-	Err(cmd2
-		.error(
-			ErrorKind::InvalidSubcommand,
-			format!("unknown command: {sub_name}"),
-		)
-		.into())
+
+	let suggestion = cmd2
+		.get_subcommands()
+		.flat_map(|sub| {
+			let name = sub.get_name().to_string();
+			let aliases: Vec<String> =
+				sub.get_all_aliases().map(|a| a.to_string()).collect();
+			std::iter::once(name).chain(aliases)
+		})
+		.filter(|candidate| crate::util::levenshtein(sub_name, candidate) <= 3)
+		.min_by_key(|candidate| crate::util::levenshtein(sub_name, candidate));
+
+	let msg = match suggestion {
+		Some(s) => {
+			format!("unknown command: {sub_name}\n\n  Did you mean: {s}?")
+		}
+		None => format!("unknown command: {sub_name}"),
+	};
+
+	Err(cmd2.error(ErrorKind::InvalidSubcommand, msg).into())
 }

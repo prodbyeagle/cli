@@ -66,7 +66,9 @@ fn run(matches: &ArgMatches, _: &Context) -> anyhow::Result<()> {
 		"discord" => base_root.join("discord"),
 		"next" => base_root.join("frontend"),
 		"typescript" => base_root.join("typescript"),
-		_ => anyhow::bail!("Invalid template: {template}"),
+		_ => anyhow::bail!(
+			"unknown template '{template}' — valid options: discord, next, typescript"
+		),
 	};
 	ui::muted(&format!("Target root: {}", target_root.display()));
 
