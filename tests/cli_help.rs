@@ -82,5 +82,5 @@ fn version_output_contains_version_number() {
 	cmd.arg("version")
 		.assert()
 		.success()
-		.stdout(contains("3.1.0"));
+		.stdout(contains("3.2.0"));
 }
