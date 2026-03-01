@@ -1,0 +1,69 @@
+name: version-bump
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  bump:
+    # Skip the commit that this workflow itself creates
+    if: "!startsWith(github.event.head_commit.message, 'chore(release):')"
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # A PAT is required so that the tag push triggers the release workflow.
+          # Create a fine-grained token with "Contents: read & write" and store
+          # it as a repository secret named RELEASE_TOKEN.
+          token: ${{ secrets.RELEASE_TOKEN }}
+          fetch-depth: 0
+
+      - name: Determine bump type from merged PR labels
+        id: labels
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { data: pulls } = await github.rest.repos.listPullRequestsAssociatedWithCommit({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              commit_sha: context.sha,
+            });
+            const pr = pulls.find(p => p.merge_commit_sha === context.sha);
+            const labelNames = pr ? pr.labels.map(l => l.name) : [];
+            core.info(`PR labels: ${labelNames.join(', ') || '(none)'}`);
+            if (labelNames.includes('major')) core.setOutput('bump', 'major');
+            else if (labelNames.includes('minor')) core.setOutput('bump', 'minor');
+            else core.setOutput('bump', 'patch');
+
+      - name: Bump version in Cargo.toml and Cargo.lock
+        id: version
+        run: |
+          CURRENT=$(grep '^version' Cargo.toml | head -1 | sed 's/version = "\(.*\)"/\1/')
+          IFS='.' read -r MAJOR MINOR PATCH <<< "$CURRENT"
+          BUMP="${{ steps.labels.outputs.bump }}"
+          if [ "$BUMP" = "major" ]; then
+            MAJOR=$((MAJOR + 1)); MINOR=0; PATCH=0
+          elif [ "$BUMP" = "minor" ]; then
+            MINOR=$((MINOR + 1)); PATCH=0
+          else
+            PATCH=$((PATCH + 1))
+          fi
+          NEW="$MAJOR.$MINOR.$PATCH"
+          sed -i "0,/^version = \"$CURRENT\"/s//version = \"$NEW\"/" Cargo.toml
+          sed -i "0,/^version = \"$CURRENT\"/s//version = \"$NEW\"/" Cargo.lock
+          echo "version=$NEW" >> "$GITHUB_OUTPUT"
+          echo "tag=v$NEW" >> "$GITHUB_OUTPUT"
+          echo "Bumped $CURRENT → $NEW ($BUMP)"
+
+      - name: Commit, tag, and push
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add Cargo.toml Cargo.lock
+          git commit -m "chore(release): bump version to ${{ steps.version.outputs.version }}"
+          git tag "${{ steps.version.outputs.tag }}"
+          git push origin main "${{ steps.version.outputs.tag }}"
