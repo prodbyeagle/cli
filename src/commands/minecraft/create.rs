@@ -247,8 +247,8 @@ fn write_server_properties(
 	lines.push("level-name=world".to_string());
 	lines.push("gamemode=survival".to_string());
 	lines.push("difficulty=easy".to_string());
-	lines.push("max-players=20".to_string());
-	lines.push("view-distance=10".to_string());
+	lines.push("max-players=5".to_string());
+	lines.push("view-distance=32".to_string());
 	lines.push("simulation-distance=10".to_string());
 	lines.push("spawn-protection=16".to_string());
 	lines.push("sync-chunk-writes=true".to_string());
