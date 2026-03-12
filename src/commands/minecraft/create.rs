@@ -101,10 +101,7 @@ pub(super) fn run_create(matches: &ArgMatches) -> anyhow::Result<()> {
 	};
 
 	let port = *matches.get_one::<u16>("port").unwrap_or(&22222);
-	let motd = matches
-		.get_one::<String>("motd")
-		.map(|s| s.to_string())
-		.unwrap_or_else(|| "eagle minecraft server".to_string());
+	let motd = matches.get_one::<String>("motd").cloned().unwrap();
 
 	let force = matches.get_flag("force");
 	let skip_download = matches.get_flag("skip_download");
@@ -189,7 +186,7 @@ fn select_server_type() -> ServerType {
 		.interact()
 		.unwrap_or(0);
 
-	if options[selection] == "fabric" {
+	if selection == 1 {
 		ServerType::Fabric
 	} else {
 		ServerType::Paper
@@ -224,11 +221,12 @@ fn validate_server_name(name: &str) -> anyhow::Result<()> {
 }
 
 fn write_eula(server_dir: &Path) -> anyhow::Result<()> {
-	let content = "# By changing the setting below to TRUE you are indicating your\n# agreement to our EULA (https://aka.ms/MinecraftEULA).\n"
-			.to_string()
-		+ "eula=true\n";
-
-	std::fs::write(server_dir.join("eula.txt"), content)?;
+	std::fs::write(
+		server_dir.join("eula.txt"),
+		"# By changing the setting below to TRUE you are indicating your\n\
+		 # agreement to our EULA (https://aka.ms/MinecraftEULA).\n\
+		 eula=true\n",
+	)?;
 	Ok(())
 }
 
@@ -237,39 +235,37 @@ fn write_server_properties(
 	port: u16,
 	motd: &str,
 ) -> anyhow::Result<()> {
-	let mut lines = Vec::new();
-	lines.push("enable-jmx-monitoring=false".to_string());
-	lines.push(format!("server-port={port}"));
-	lines.push("server-ip=".to_string());
-	lines.push(format!("motd={motd}"));
-	lines.push("enable-command-block=false".to_string());
-	lines.push("online-mode=true".to_string());
-	lines.push("level-name=world".to_string());
-	lines.push("gamemode=survival".to_string());
-	lines.push("difficulty=easy".to_string());
-	lines.push("max-players=5".to_string());
-	lines.push("view-distance=32".to_string());
-	lines.push("simulation-distance=10".to_string());
-	lines.push("spawn-protection=16".to_string());
-	lines.push("sync-chunk-writes=true".to_string());
-	lines.push("enable-rcon=false".to_string());
-	lines.push("enable-query=false".to_string());
-	lines.push("enforce-secure-profile=true".to_string());
-	lines.push("white-list=false".to_string());
-	lines.push("pvp=true".to_string());
-	lines.push("allow-flight=false".to_string());
-	lines.push("generate-structures=true".to_string());
-	lines.push("level-seed=".to_string());
-	lines.push("allow-nether=true".to_string());
-	lines.push("spawn-animals=true".to_string());
-	lines.push("spawn-monsters=true".to_string());
-	lines.push("spawn-npcs=true".to_string());
-	lines.push("use-native-transport=true".to_string());
+	let content = format!(
+		"enable-jmx-monitoring=false\n\
+		 server-port={port}\n\
+		 server-ip=\n\
+		 motd={motd}\n\
+		 enable-command-block=false\n\
+		 online-mode=true\n\
+		 level-name=world\n\
+		 gamemode=survival\n\
+		 difficulty=easy\n\
+		 max-players=5\n\
+		 view-distance=32\n\
+		 simulation-distance=10\n\
+		 spawn-protection=16\n\
+		 sync-chunk-writes=true\n\
+		 enable-rcon=false\n\
+		 enable-query=false\n\
+		 enforce-secure-profile=true\n\
+		 white-list=false\n\
+		 pvp=true\n\
+		 allow-flight=false\n\
+		 generate-structures=true\n\
+		 level-seed=\n\
+		 allow-nether=true\n\
+		 spawn-animals=true\n\
+		 spawn-monsters=true\n\
+		 spawn-npcs=true\n\
+		 use-native-transport=true\n"
+	);
 
-	std::fs::write(
-		server_dir.join("server.properties"),
-		format!("{}\n", lines.join("\n")),
-	)?;
+	std::fs::write(server_dir.join("server.properties"), content)?;
 
 	Ok(())
 }

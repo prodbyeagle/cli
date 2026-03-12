@@ -60,14 +60,9 @@ fn run_impl(reinstall: bool) -> anyhow::Result<()> {
 		update_repo(repo_url, &clone_dir)?;
 	} else {
 		ui::info("Cloning repo...");
-		let status = std::process::Command::new("git")
-			.arg("clone")
-			.arg(repo_url)
-			.arg(&clone_dir)
-			.stdin(std::process::Stdio::inherit())
-			.stdout(std::process::Stdio::inherit())
-			.stderr(std::process::Stdio::inherit())
-			.status()?;
+		let clone_dir_s = clone_dir.to_string_lossy();
+		let status =
+			util::run_inherit("git", &["clone", repo_url, &clone_dir_s])?;
 		if !status.success() {
 			anyhow::bail!("git clone failed");
 		}

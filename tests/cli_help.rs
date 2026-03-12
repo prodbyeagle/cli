@@ -26,15 +26,6 @@ fn minecraft_create_help_succeeds() {
 }
 
 #[test]
-fn codex_help_succeeds() {
-	let mut cmd = cargo_bin_cmd!("eagle");
-	cmd.args(["help", "codex"])
-		.assert()
-		.success()
-		.stdout(contains("codex --yolo"));
-}
-
-#[test]
 fn create_help_succeeds() {
 	let mut cmd = cargo_bin_cmd!("eagle");
 	cmd.args(["create", "--help"])

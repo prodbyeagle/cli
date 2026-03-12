@@ -1,3 +1,5 @@
+use std::cmp::Ordering;
+
 use clap::{Arg, ArgMatches, Command};
 
 use crate::commands::CommandSpec;
@@ -36,4 +38,21 @@ inventory::submit! {
 		command: build,
 		run,
 	}
+}
+
+pub(crate) fn cmp_numeric_dotted(a: &str, b: &str) -> Ordering {
+	let pa = a.split('.').collect::<Vec<_>>();
+	let pb = b.split('.').collect::<Vec<_>>();
+	let max_len = pa.len().max(pb.len());
+
+	for idx in 0..max_len {
+		let av = pa.get(idx).and_then(|p| p.parse::<u32>().ok()).unwrap_or(0);
+		let bv = pb.get(idx).and_then(|p| p.parse::<u32>().ok()).unwrap_or(0);
+		match av.cmp(&bv) {
+			Ordering::Equal => continue,
+			other => return other,
+		}
+	}
+
+	Ordering::Equal
 }

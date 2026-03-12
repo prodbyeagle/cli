@@ -29,7 +29,7 @@ fn run(matches: &ArgMatches, ctx: &Context) -> anyhow::Result<()> {
 	let yes = matches.get_flag("yes");
 	let force = matches.get_flag("force");
 
-	if is_dev_exe(&ctx.exe_path) && !force {
+	if crate::commands::update::is_dev_exe(&ctx.exe_path) && !force {
 		anyhow::bail!("Refusing to uninstall a dev binary. Use --force.");
 	}
 
@@ -64,11 +64,6 @@ if (Test-Path $PROFILE) {{ \
 		"Uninstall scheduled. Close this shell if eagle is still in use.",
 	);
 	Ok(())
-}
-
-fn is_dev_exe(path: &std::path::Path) -> bool {
-	let s = path.to_string_lossy().to_lowercase();
-	s.contains("\\target\\debug\\") || s.contains("\\target\\release\\")
 }
 
 inventory::submit! {

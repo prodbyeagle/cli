@@ -1,4 +1,3 @@
-use std::cmp::Ordering;
 use std::path::Path;
 
 use serde::Deserialize;
@@ -84,32 +83,15 @@ pub fn pick_best_combo(combos: &[LoaderCombo]) -> Option<&LoaderCombo> {
 				&& c.installer.stable.unwrap_or(true)
 		})
 		.max_by(|a, b| {
-			cmp_numeric_dotted(&a.loader.version, &b.loader.version).then_with(
-				|| {
-					cmp_numeric_dotted(
+			super::cmp_numeric_dotted(&a.loader.version, &b.loader.version)
+				.then_with(|| {
+					super::cmp_numeric_dotted(
 						&a.installer.version,
 						&b.installer.version,
 					)
-				},
-			)
+				})
 		});
 
 	stable_max.or_else(|| combos.first())
 }
 
-fn cmp_numeric_dotted(a: &str, b: &str) -> Ordering {
-	let pa = a.split('.').collect::<Vec<_>>();
-	let pb = b.split('.').collect::<Vec<_>>();
-	let max_len = pa.len().max(pb.len());
-
-	for idx in 0..max_len {
-		let av = pa.get(idx).and_then(|p| p.parse::<u32>().ok()).unwrap_or(0);
-		let bv = pb.get(idx).and_then(|p| p.parse::<u32>().ok()).unwrap_or(0);
-		match av.cmp(&bv) {
-			Ordering::Equal => continue,
-			other => return other,
-		}
-	}
-
-	Ordering::Equal
-}

@@ -36,9 +36,7 @@ fn run() -> anyhow::Result<()> {
 		}
 	}
 
-	let mut cmd2 = eagle::cli::build_cli();
-
-	let suggestion = cmd2
+	let suggestion = cmd
 		.get_subcommands()
 		.flat_map(|sub| {
 			let name = sub.get_name().to_string();
@@ -56,5 +54,5 @@ fn run() -> anyhow::Result<()> {
 		None => format!("unknown command: {sub_name}"),
 	};
 
-	Err(cmd2.error(ErrorKind::InvalidSubcommand, msg).into())
+	Err(cmd.error(ErrorKind::InvalidSubcommand, msg).into())
 }

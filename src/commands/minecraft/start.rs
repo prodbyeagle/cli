@@ -79,7 +79,7 @@ pub fn build_java_args(ram_mb: u32, jar_path: &Path) -> Vec<String> {
 	let ram = format!("-Xmx{ram_mb}M");
 	let ram2 = format!("-Xms{ram_mb}M");
 
-	let args = vec![
+	vec![
 		ram,
 		ram2,
 		"-XX:+UseG1GC".to_string(),
@@ -105,7 +105,5 @@ pub fn build_java_args(ram_mb: u32, jar_path: &Path) -> Vec<String> {
 		"-jar".to_string(),
 		jar_path.to_string_lossy().to_string(),
 		"nogui".to_string(),
-	];
-
-	args
+	]
 }

@@ -87,14 +87,9 @@ fn run(matches: &ArgMatches, _: &Context) -> anyhow::Result<()> {
 	};
 	ui::info(&format!("Cloning template: {repo_url}"));
 
-	let status = std::process::Command::new("git")
-		.arg("clone")
-		.arg(repo_url)
-		.arg(&project_path)
-		.stdin(std::process::Stdio::inherit())
-		.stdout(std::process::Stdio::inherit())
-		.stderr(std::process::Stdio::inherit())
-		.status()?;
+	let project_path_s = project_path.to_string_lossy();
+	let status =
+		util::run_inherit("git", &["clone", repo_url, &project_path_s])?;
 	if !status.success() {
 		anyhow::bail!("git clone failed");
 	}

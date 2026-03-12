@@ -1,4 +1,3 @@
-use std::cmp::Ordering;
 use std::collections::HashMap;
 use std::path::Path;
 
@@ -56,26 +55,9 @@ pub fn pick_best_version_for_family(versions: &[String]) -> Option<&str> {
 	let stable_max = versions
 		.iter()
 		.filter(|v| !v.contains('-'))
-		.max_by(|a, b| cmp_numeric_dotted(a, b));
+		.max_by(|a, b| super::cmp_numeric_dotted(a, b));
 
 	stable_max.or_else(|| versions.first()).map(|s| s.as_str())
-}
-
-fn cmp_numeric_dotted(a: &str, b: &str) -> Ordering {
-	let pa = a.split('.').collect::<Vec<_>>();
-	let pb = b.split('.').collect::<Vec<_>>();
-	let max_len = pa.len().max(pb.len());
-
-	for idx in 0..max_len {
-		let av = pa.get(idx).and_then(|p| p.parse::<u32>().ok()).unwrap_or(0);
-		let bv = pb.get(idx).and_then(|p| p.parse::<u32>().ok()).unwrap_or(0);
-		match av.cmp(&bv) {
-			Ordering::Equal => continue,
-			other => return other,
-		}
-	}
-
-	Ordering::Equal
 }
 
 #[derive(Debug, Clone, Deserialize)]
