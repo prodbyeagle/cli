@@ -56,8 +56,7 @@ fn collect_projects_finds_correct_dirs() {
 	let projects = eagle::commands::goto::collect_projects(root.path())
 		.expect("collect_projects");
 
-	let labels: Vec<&str> =
-		projects.iter().map(|(l, _)| l.as_str()).collect();
+	let labels: Vec<&str> = projects.iter().map(|(l, _)| l.as_str()).collect();
 
 	assert_eq!(labels.len(), 3, "expected 3 projects, got {labels:?}");
 	assert!(labels.contains(&".25/discord/my-bot"));
@@ -70,8 +69,7 @@ fn collect_projects_are_sorted() {
 	let root = make_dev_root();
 	let projects = eagle::commands::goto::collect_projects(root.path())
 		.expect("collect_projects");
-	let labels: Vec<&str> =
-		projects.iter().map(|(l, _)| l.as_str()).collect();
+	let labels: Vec<&str> = projects.iter().map(|(l, _)| l.as_str()).collect();
 	let mut sorted = labels.clone();
 	sorted.sort();
 	assert_eq!(labels, sorted);

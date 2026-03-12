@@ -88,8 +88,7 @@ pub fn collect_projects(
 
 			for proj_path in proj_entries {
 				let proj_name = dir_name(&proj_path);
-				let label =
-					format!("{year_name}/{cat_name}/{proj_name}");
+				let label = format!("{year_name}/{cat_name}/{proj_name}");
 				projects.push((label, proj_path));
 			}
 		}
@@ -100,9 +99,7 @@ pub fn collect_projects(
 }
 
 /// Returns the sorted list of sub-directories directly inside `dir`.
-fn read_dir_sorted(
-	dir: &std::path::Path,
-) -> anyhow::Result<Vec<PathBuf>> {
+fn read_dir_sorted(dir: &std::path::Path) -> anyhow::Result<Vec<PathBuf>> {
 	let mut entries: Vec<PathBuf> = Vec::new();
 
 	for entry in std::fs::read_dir(dir)? {
