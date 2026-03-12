@@ -3,6 +3,7 @@ use std::path::PathBuf;
 use clap::{Arg, ArgMatches, Command};
 use dialoguer::FuzzySelect;
 use dialoguer::console::Term;
+use dialoguer::theme::ColorfulTheme;
 
 use crate::commands::CommandSpec;
 use crate::context::Context;
@@ -45,11 +46,19 @@ fn run(matches: &ArgMatches, _: &Context) -> anyhow::Result<()> {
 		);
 	}
 
-	let labels: Vec<&str> =
-		projects.iter().map(|(label, _)| label.as_str()).collect();
+	let labels: Vec<String> = projects
+		.iter()
+		.map(|(label, _)| {
+			let parts: Vec<&str> = label.splitn(3, '/').collect();
+			match parts.as_slice() {
+				[year, cat, proj] => format!("{year}  ›  {cat}  ›  {proj}"),
+				_ => label.clone(),
+			}
+		})
+		.collect();
 
-	let idx = FuzzySelect::new()
-		.with_prompt("Jump to")
+	let idx = FuzzySelect::with_theme(&ColorfulTheme::default())
+		.with_prompt("  goto")
 		.items(&labels)
 		.interact_on(&Term::stderr())?;
 
@@ -60,7 +69,7 @@ fn run(matches: &ArgMatches, _: &Context) -> anyhow::Result<()> {
 /// Walks `root` and collects all project directories three levels deep:
 /// `<root>/<year>/<category>/<project>` where `<year>` matches `.NN`.
 ///
-/// Returns `(label, absolute_path)` pairs sorted by label.
+/// Returns `(label, absolute_path)` pairs sorted newest year first, then alphabetically.
 pub fn collect_projects(
 	root: &std::path::Path,
 ) -> anyhow::Result<Vec<(String, PathBuf)>> {
@@ -94,7 +103,11 @@ pub fn collect_projects(
 		}
 	}
 
-	projects.sort_by(|a, b| a.0.cmp(&b.0));
+	projects.sort_by(|a, b| {
+		let a_year = a.0.split('/').next().unwrap_or("");
+		let b_year = b.0.split('/').next().unwrap_or("");
+		b_year.cmp(a_year).then_with(|| a.0.cmp(&b.0))
+	});
 	Ok(projects)
 }
 

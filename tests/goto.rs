@@ -70,7 +70,13 @@ fn collect_projects_are_sorted() {
 	let projects = eagle::commands::goto::collect_projects(root.path())
 		.expect("collect_projects");
 	let labels: Vec<&str> = projects.iter().map(|(l, _)| l.as_str()).collect();
-	let mut sorted = labels.clone();
-	sorted.sort();
-	assert_eq!(labels, sorted);
+	// Newest year first, then alphabetical within each year.
+	assert_eq!(
+		labels,
+		vec![
+			".26/apps/my-app",
+			".26/frontend/my-site",
+			".25/discord/my-bot"
+		]
+	);
 }
