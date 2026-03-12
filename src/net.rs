@@ -180,9 +180,7 @@ fn download_to_file_internal(
 	}
 
 	let temp_path = temp_download_path(out_path);
-	if temp_path.exists() {
-		let _ = std::fs::remove_file(&temp_path);
-	}
+	let _ = std::fs::remove_file(&temp_path);
 
 	let resp = call_with_retries(&format!("GET {url}"), || request_get(url))?;
 
@@ -241,9 +239,7 @@ fn download_to_file_internal(
 		}
 	}
 
-	if out_path.exists() {
-		std::fs::remove_file(out_path)?;
-	}
+	let _ = std::fs::remove_file(out_path);
 	std::fs::rename(&temp_path, out_path)?;
 
 	Ok(())
