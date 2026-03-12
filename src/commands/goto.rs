@@ -40,7 +40,7 @@ fn run(matches: &ArgMatches, _: &Context) -> anyhow::Result<()> {
 	if projects.is_empty() {
 		anyhow::bail!(
 			"No projects found under {}.\n\
-			 Expected structure: <root>/.NN/<category>/<project>/\n\
+			 Expected structure: <root>/<category>/<project>/\n\
 			 Set EAGLE_DEV_ROOT or pass --root to change the root.",
 			dev_root.display()
 		);
@@ -49,9 +49,9 @@ fn run(matches: &ArgMatches, _: &Context) -> anyhow::Result<()> {
 	let labels: Vec<String> = projects
 		.iter()
 		.map(|(label, _)| {
-			let parts: Vec<&str> = label.splitn(3, '/').collect();
+			let parts: Vec<&str> = label.splitn(2, '/').collect();
 			match parts.as_slice() {
-				[year, cat, proj] => format!("{year}  ›  {cat}  ›  {proj}"),
+				[cat, proj] => format!("{cat}  ›  {proj}"),
 				_ => label.clone(),
 			}
 		})
@@ -66,48 +66,32 @@ fn run(matches: &ArgMatches, _: &Context) -> anyhow::Result<()> {
 	Ok(())
 }
 
-/// Walks `root` and collects all project directories three levels deep:
-/// `<root>/<year>/<category>/<project>` where `<year>` matches `.NN`.
+/// Walks `root` and collects all project directories two levels deep:
+/// `<root>/<category>/<project>`.
 ///
-/// Returns `(label, absolute_path)` pairs sorted newest year first, then alphabetically.
+/// Returns `(label, absolute_path)` pairs sorted alphabetically.
 pub fn collect_projects(
 	root: &std::path::Path,
 ) -> anyhow::Result<Vec<(String, PathBuf)>> {
 	let mut projects: Vec<(String, PathBuf)> = Vec::new();
 
-	let year_entries = read_dir_sorted(root)?;
-	for year_path in year_entries {
-		let year_name = dir_name(&year_path);
-		if !is_year_dir(&year_name) {
-			continue;
-		}
+	let cat_entries = read_dir_sorted(root)?;
+	for cat_path in cat_entries {
+		let cat_name = dir_name(&cat_path);
 
-		let cat_entries = match read_dir_sorted(&year_path) {
+		let proj_entries = match read_dir_sorted(&cat_path) {
 			Ok(entries) => entries,
 			Err(_) => continue,
 		};
 
-		for cat_path in cat_entries {
-			let cat_name = dir_name(&cat_path);
-
-			let proj_entries = match read_dir_sorted(&cat_path) {
-				Ok(entries) => entries,
-				Err(_) => continue,
-			};
-
-			for proj_path in proj_entries {
-				let proj_name = dir_name(&proj_path);
-				let label = format!("{year_name}/{cat_name}/{proj_name}");
-				projects.push((label, proj_path));
-			}
+		for proj_path in proj_entries {
+			let proj_name = dir_name(&proj_path);
+			let label = format!("{cat_name}/{proj_name}");
+			projects.push((label, proj_path));
 		}
 	}
 
-	projects.sort_by(|a, b| {
-		let a_year = a.0.split('/').next().unwrap_or("");
-		let b_year = b.0.split('/').next().unwrap_or("");
-		b_year.cmp(a_year).then_with(|| a.0.cmp(&b.0))
-	});
+	projects.sort_by(|a, b| a.0.cmp(&b.0));
 	Ok(projects)
 }
 
@@ -132,15 +116,6 @@ fn dir_name(path: &std::path::Path) -> String {
 		.and_then(|n| n.to_str())
 		.unwrap_or("")
 		.to_owned()
-}
-
-/// Returns `true` for names like `.25`, `.26` — a dot followed by
-/// exactly two ASCII digits.
-fn is_year_dir(name: &str) -> bool {
-	let Some(rest) = name.strip_prefix('.') else {
-		return false;
-	};
-	rest.len() == 2 && rest.bytes().all(|b| b.is_ascii_digit())
 }
 
 fn resolve_dev_root(matches: &ArgMatches) -> anyhow::Result<PathBuf> {
