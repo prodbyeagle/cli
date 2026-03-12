@@ -94,4 +94,3 @@ pub fn pick_best_combo(combos: &[LoaderCombo]) -> Option<&LoaderCombo> {
 
 	stable_max.or_else(|| combos.first())
 }
-

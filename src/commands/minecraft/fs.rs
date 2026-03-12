@@ -17,7 +17,7 @@ pub fn find_servers(root: &Path) -> anyhow::Result<Vec<PathBuf>> {
 	let read_dir = match std::fs::read_dir(root) {
 		Ok(rd) => rd,
 		Err(err) if err.kind() == std::io::ErrorKind::NotFound => {
-			return Ok(Vec::new())
+			return Ok(Vec::new());
 		}
 		Err(err) => return Err(err.into()),
 	};
