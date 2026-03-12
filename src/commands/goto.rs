@@ -2,7 +2,7 @@ use std::path::PathBuf;
 
 use clap::{Arg, ArgMatches, Command};
 use dialoguer::FuzzySelect;
-use dialoguer::console::{Term, style};
+use dialoguer::console::Term;
 use dialoguer::theme::ColorfulTheme;
 
 use crate::commands::CommandSpec;
@@ -51,14 +51,7 @@ fn run(matches: &ArgMatches, _: &Context) -> anyhow::Result<()> {
 		.map(|(label, _)| {
 			let parts: Vec<&str> = label.splitn(3, '/').collect();
 			match parts.as_slice() {
-				[year, cat, proj] => format!(
-					"{}  {}  {}  {}  {}",
-					style(year).dim(),
-					style("›").dim(),
-					style(cat).cyan(),
-					style("›").dim(),
-					style(proj).bold(),
-				),
+				[year, cat, proj] => format!("{year}  ›  {cat}  ›  {proj}"),
 				_ => label.clone(),
 			}
 		})
