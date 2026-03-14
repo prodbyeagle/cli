@@ -1,0 +1,5 @@
+# Clippy configuration for eagle
+# All warnings are treated as errors via `cargo clippy -- -D warnings` in CI.
+
+# Cognitive complexity limit per function
+cognitive-complexity-threshold = 15

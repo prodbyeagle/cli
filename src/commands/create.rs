@@ -62,14 +62,24 @@ fn run(matches: &ArgMatches, _: &Context) -> anyhow::Result<()> {
 	let year = current_two_digit_year()?;
 	let base_root = resolve_base_root(matches, &year)?;
 
-	let target_root = match template.as_str() {
-		"discord" => base_root.join("discord"),
-		"next" => base_root.join("frontend"),
-		"typescript" => base_root.join("typescript"),
+	let (target_subdir, repo_url) = match template.as_str() {
+		"discord" => (
+			"discord",
+			"https://github.com/meowlounge/discord-template.git",
+		),
+		"next" => (
+			"frontend",
+			"https://github.com/meowlounge/next-template.git",
+		),
+		"typescript" => (
+			"typescript",
+			"https://github.com/meowlounge/typescript-template.git",
+		),
 		_ => anyhow::bail!(
 			"unknown template '{template}' — valid options: discord, next, typescript"
 		),
 	};
+	let target_root = base_root.join(target_subdir);
 	ui::muted(&format!("Target root: {}", target_root.display()));
 
 	std::fs::create_dir_all(&target_root)?;
@@ -78,13 +88,6 @@ fn run(matches: &ArgMatches, _: &Context) -> anyhow::Result<()> {
 	if project_path.exists() {
 		anyhow::bail!("Project already exists: {}", project_path.display());
 	}
-
-	let repo_url = match template.as_str() {
-		"discord" => "https://github.com/meowlounge/discord-template.git",
-		"next" => "https://github.com/meowlounge/next-template.git",
-		"typescript" => "https://github.com/meowlounge/typescript-template.git",
-		_ => unreachable!(),
-	};
 	ui::info(&format!("Cloning template: {repo_url}"));
 
 	let project_path_s = project_path.to_string_lossy();

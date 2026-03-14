@@ -101,7 +101,10 @@ pub(super) fn run_create(matches: &ArgMatches) -> anyhow::Result<()> {
 	};
 
 	let port = *matches.get_one::<u16>("port").unwrap_or(&22222);
-	let motd = matches.get_one::<String>("motd").cloned().unwrap();
+	let motd = matches
+		.get_one::<String>("motd")
+		.cloned()
+		.unwrap_or_default();
 
 	let force = matches.get_flag("force");
 	let skip_download = matches.get_flag("skip_download");
