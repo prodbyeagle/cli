@@ -103,10 +103,7 @@ fn run(matches: &ArgMatches, ctx: &Context) -> anyhow::Result<()> {
 	Ok(())
 }
 
-fn run_dev_install(
-	dev_path_str: &str,
-	ctx: &Context,
-) -> anyhow::Result<()> {
+fn run_dev_install(dev_path_str: &str, ctx: &Context) -> anyhow::Result<()> {
 	let dev_path = {
 		let p = std::path::PathBuf::from(dev_path_str);
 		if p.is_absolute() {
