@@ -49,6 +49,11 @@ pub fn run_capture(program: &str, args: &[&str]) -> anyhow::Result<String> {
 }
 
 /// Returns the Levenshtein edit distance between two strings.
+#[allow(clippy::indexing_slicing)]
+// JUSTIFICATION: All indices are mathematically bounded by construction.
+// `dp` is (m+1)×(n+1), loops run 1..=m and 1..=n, so dp[i][j], dp[i-1][j-1],
+// dp[i-1][j], dp[i][j-1] are always in range. `a[i-1]` and `b[j-1]` are safe
+// because i ∈ 1..=m=a.len() and j ∈ 1..=n=b.len().
 pub fn levenshtein(a: &str, b: &str) -> usize {
 	let a: Vec<char> = a.chars().collect();
 	let b: Vec<char> = b.chars().collect();

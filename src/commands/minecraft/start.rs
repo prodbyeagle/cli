@@ -40,21 +40,22 @@ pub(super) fn run_start(matches: &ArgMatches) -> anyhow::Result<()> {
 		.default(0)
 		.interact()?;
 
-	let server_path = &servers[selection];
+	let server_path = servers.get(selection).ok_or_else(|| {
+		anyhow::anyhow!("dialoguer returned out-of-bounds index {selection}")
+	})?;
+	let item_name = items.get(selection).ok_or_else(|| {
+		anyhow::anyhow!("dialoguer returned out-of-bounds index {selection}")
+	})?;
 	let jar_path = server_path.join("server.jar");
 	if !jar_path.exists() {
 		anyhow::bail!(
-			"server.jar not found for '{}'. Recreate without --skip-download or place a jar manually.",
-			items[selection]
+			"server.jar not found for '{item_name}'. Recreate without --skip-download or place a jar manually.",
 		);
 	}
 
 	crossterm::execute!(
 		std::io::stdout(),
-		crossterm::terminal::SetTitle(format!(
-			"MC-SERVER: {}",
-			items[selection]
-		))
+		crossterm::terminal::SetTitle(format!("MC-SERVER: {item_name}"))
 	)?;
 
 	let java_args = build_java_args(ram_mb, &jar_path);

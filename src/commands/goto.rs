@@ -62,7 +62,10 @@ fn run(matches: &ArgMatches, _: &Context) -> anyhow::Result<()> {
 		.items(&labels)
 		.interact_on(&Term::stderr())?;
 
-	println!("{}", projects[idx].1.display());
+	let (_, path) = projects.get(idx).ok_or_else(|| {
+		anyhow::anyhow!("dialoguer returned out-of-bounds index {idx}")
+	})?;
+	println!("{}", path.display());
 	Ok(())
 }
 

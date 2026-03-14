@@ -212,8 +212,11 @@ fn download_to_file_internal(
 			break;
 		}
 
-		file.write_all(&buf[..n])?;
-		hasher.update(&buf[..n]);
+		let chunk = buf.get(..n).ok_or_else(|| {
+			anyhow::anyhow!("read() returned out-of-range length {n}")
+		})?;
+		file.write_all(chunk)?;
+		hasher.update(chunk);
 		downloaded += n as u64;
 
 		if last_draw.elapsed() >= Duration::from_millis(120) {

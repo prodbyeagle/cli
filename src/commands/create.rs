@@ -156,7 +156,10 @@ fn select_template() -> anyhow::Result<String> {
 		.default(0)
 		.interact()
 		.map_err(|err| anyhow::anyhow!("Failed to select template: {err}"))?;
-	Ok(options[selection].to_string())
+	let chosen = options.get(selection).ok_or_else(|| {
+		anyhow::anyhow!("dialoguer returned out-of-bounds index {selection}")
+	})?;
+	Ok((*chosen).to_string())
 }
 
 fn current_two_digit_year() -> anyhow::Result<String> {
