@@ -1,0 +1,72 @@
+---
+name: git-workflow
+description: Build clean, useful git commits and PRs for this repo — runs all checks first, then commits with a conventional message and pushes.
+---
+
+You are helping the user commit and push changes to a Rust CLI project. Follow these steps exactly.
+
+## Step 1 — Pre-commit checks (REQUIRED, never skip)
+
+Run all three in sequence. Stop and fix any failures before continuing.
+
+```
+cargo fmt --check
+cargo build
+cargo test
+```
+
+If `cargo fmt --check` fails, run `cargo fmt` to fix it, then re-run the check.
+If `cargo build` or `cargo test` fails, fix the underlying issue before committing.
+
+## Step 2 — Understand the changes
+
+Run these in parallel:
+```
+git status
+git diff
+git log --oneline -5
+```
+
+## Step 3 — Write the commit message
+
+Follow **Conventional Commits**:
+
+| Prefix | When |
+|--------|------|
+| `feat(scope):` | New command, flag, or user-visible feature |
+| `fix(scope):` | Bug fix |
+| `refactor(scope):` | Code cleanup, no behavior change |
+| `chore:` | Dependencies, tooling, CI |
+| `docs:` | README, comments, CLAUDE.md |
+| `test:` | Adding or fixing tests |
+
+- Scope is optional but encouraged: `feat(goto):`, `fix(update):`, etc.
+- Keep the subject line under 72 characters
+- Add `Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>` as a trailer
+
+## Step 4 — Stage and commit
+
+Stage only relevant files (never `git add -A` blindly — avoid `.env`, secrets, large binaries).
+
+```bash
+git add <specific files>
+git commit -m "$(cat <<'EOF'
+<type>(scope): <subject>
+
+Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>
+EOF
+)"
+```
+
+## Step 5 — Push
+
+```bash
+git pull --rebase origin main && git push origin main
+```
+
+If push is rejected, rebase and retry once. If there are conflicts, resolve them and ask the user before force-pushing.
+
+## PR label reminder
+
+Every PR merged into `main` needs exactly one label: `major`, `minor`, or `patch`.
+This drives the automatic version bump — default is `patch` if no label is set.
