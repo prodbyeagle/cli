@@ -1,4 +1,9 @@
 use std::process::{Command, ExitStatus, Stdio};
+#[cfg(target_os = "windows")]
+use std::os::windows::process::CommandExt;
+
+#[cfg(target_os = "windows")]
+const CREATE_NO_WINDOW: u32 = 0x0800_0000;
 
 /// Runs a command inheriting stdin/stdout/stderr.
 pub fn run_inherit(program: &str, args: &[&str]) -> anyhow::Result<ExitStatus> {
@@ -74,18 +79,25 @@ pub fn escape_powershell_single_quoted(value: &str) -> String {
 }
 
 /// Spawns a hidden PowerShell process that executes the given command string.
+///
+/// Uses `CREATE_NO_WINDOW` on Windows so no console window is created and
+/// the current terminal's focus is never disturbed.
 pub fn spawn_powershell_hidden(command: &str) -> anyhow::Result<()> {
-	Command::new("powershell")
-		.args([
-			"-NoProfile",
-			"-ExecutionPolicy",
-			"Bypass",
-			"-WindowStyle",
-			"Hidden",
-			"-Command",
-			command,
-		])
-		.spawn()?;
+	let mut cmd = Command::new("powershell");
+	cmd.args([
+		"-NoProfile",
+		"-NonInteractive",
+		"-ExecutionPolicy",
+		"Bypass",
+		"-Command",
+		command,
+	])
+	.stdout(Stdio::null())
+	.stderr(Stdio::null());
 
+	#[cfg(target_os = "windows")]
+	cmd.creation_flags(CREATE_NO_WINDOW);
+
+	cmd.spawn()?;
 	Ok(())
 }

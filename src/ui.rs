@@ -49,3 +49,11 @@ pub fn error(message: &str) {
 		eprintln!("{message}");
 	}
 }
+
+pub fn debug(message: &str) {
+	if stderr_colors() {
+		eprintln!("{} {}", "dbg".dark_grey(), message.dark_grey());
+	} else {
+		eprintln!("[dbg] {message}");
+	}
+}

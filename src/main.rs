@@ -9,7 +9,6 @@ fn main() {
 }
 
 fn run() -> anyhow::Result<()> {
-	let ctx = Context::new()?;
 	let mut cmd = eagle::cli::build_cli();
 
 	let matches = match cmd.clone().try_get_matches() {
@@ -25,14 +24,33 @@ fn run() -> anyhow::Result<()> {
 		Err(err) => return Err(err.into()),
 	};
 
+	let ctx = Context::new()?;
+
+	if ctx.dev_mode {
+		eagle::ui::debug(&format!("eagle v{}", ctx.version_string()));
+		eagle::ui::debug(&format!("exe: {}", ctx.exe_path.display()));
+	}
+
 	let (sub_name, sub_matches) = matches.subcommand().ok_or_else(|| {
 		cmd.error(ErrorKind::MissingSubcommand, "missing command")
 	})?;
 
+	if ctx.dev_mode {
+		eagle::ui::debug(&format!("dispatch → {sub_name}"));
+	}
+
 	for spec in eagle::commands::iter_specs() {
 		let sub = (spec.command)();
 		if sub.get_name() == sub_name {
-			return (spec.run)(sub_matches, &ctx);
+			let t0 = std::time::Instant::now();
+			let result = (spec.run)(sub_matches, &ctx);
+			if ctx.dev_mode {
+				eagle::ui::debug(&format!(
+					"finished in {:.1}ms",
+					t0.elapsed().as_secs_f64() * 1000.0
+				));
+			}
+			return result;
 		}
 	}
 

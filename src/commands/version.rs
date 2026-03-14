@@ -11,7 +11,7 @@ fn build() -> Command {
 }
 
 fn run(_: &ArgMatches, ctx: &Context) -> anyhow::Result<()> {
-	ui::success(&format!("eagle {}", ctx.version));
+	ui::success(&format!("eagle v{}", ctx.version_string()));
 	ui::muted(ctx.repo_url);
 	Ok(())
 }

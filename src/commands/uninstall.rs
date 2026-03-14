@@ -49,7 +49,7 @@ fn run(matches: &ArgMatches, ctx: &Context) -> anyhow::Result<()> {
 		util::escape_powershell_single_quoted(&ctx.exe_path.to_string_lossy());
 
 	let script = format!(
-		"Wait-Process -Id {pid}; \
+		"Wait-Process -Id {pid} -ErrorAction SilentlyContinue; \
 if (Test-Path '{exe_path}') {{ Remove-Item -Force '{exe_path}' }}; \
 if (Test-Path $PROFILE) {{ \
   $c = Get-Content $PROFILE; \

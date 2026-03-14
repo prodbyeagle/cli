@@ -49,10 +49,27 @@ fn build() -> Command {
 				.help("Run even if this looks like a dev binary")
 				.action(clap::ArgAction::SetTrue),
 		)
+		.arg(
+			Arg::new("dev")
+				.long("dev")
+				.help(
+					"Install a local dev build instead of pulling from GitHub.\n\
+					 Optionally pass the path to the binary; defaults to\n\
+					 .\\target\\debug\\eagle.exe (relative to the current directory).",
+				)
+				.num_args(0..=1)
+				.value_name("PATH")
+				.default_missing_value("target/debug/eagle.exe"),
+		)
 }
 
 fn run(matches: &ArgMatches, ctx: &Context) -> anyhow::Result<()> {
 	let force = matches.get_flag("force");
+
+	if let Some(dev_path_str) = matches.get_one::<String>("dev") {
+		return run_dev_install(dev_path_str, ctx);
+	}
+
 	if is_dev_exe(&ctx.exe_path) && !force {
 		anyhow::bail!("Refusing to self-update a dev binary. Use --force.");
 	}
@@ -81,6 +98,50 @@ fn run(matches: &ArgMatches, ctx: &Context) -> anyhow::Result<()> {
 		digest,
 	)?;
 
+	schedule_replace(&new_path, ctx)?;
+	ui::success("Update scheduled. Re-run eagle in a new shell.");
+	Ok(())
+}
+
+fn run_dev_install(
+	dev_path_str: &str,
+	ctx: &Context,
+) -> anyhow::Result<()> {
+	let dev_path = {
+		let p = std::path::PathBuf::from(dev_path_str);
+		if p.is_absolute() {
+			p
+		} else {
+			std::env::current_dir()?.join(p)
+		}
+	};
+
+	if !dev_path.exists() {
+		anyhow::bail!(
+			"Dev binary not found: {}\n\
+			 Build it first with `cargo build --release`, or pass the path explicitly:\n\
+			 eagle update --dev <PATH>",
+			dev_path.display()
+		);
+	}
+
+	let new_path = ctx.exe_dir.join("eagle.new.exe");
+	ui::info(&format!(
+		"Installing dev build: {} → {}",
+		dev_path.display(),
+		ctx.exe_path.display()
+	));
+	std::fs::copy(&dev_path, &new_path)?;
+
+	schedule_replace(&new_path, ctx)?;
+	ui::success("Dev build installed. Re-run eagle in a new shell.");
+	Ok(())
+}
+
+fn schedule_replace(
+	new_path: &std::path::Path,
+	ctx: &Context,
+) -> anyhow::Result<()> {
 	let pid = std::process::id();
 	let exe_path =
 		util::escape_powershell_single_quoted(&ctx.exe_path.to_string_lossy());
@@ -92,10 +153,7 @@ fn run(matches: &ArgMatches, ctx: &Context) -> anyhow::Result<()> {
 Move-Item -Force '{new_path_s}' '{exe_path}'"
 	);
 
-	util::spawn_powershell_hidden(&script)?;
-
-	ui::success("Update scheduled. Re-run eagle in a new shell.");
-	Ok(())
+	util::spawn_powershell_hidden(&script)
 }
 
 #[doc(hidden)]
