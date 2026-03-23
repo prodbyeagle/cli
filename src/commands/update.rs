@@ -142,8 +142,7 @@ fn schedule_replace(
 	let pid = std::process::id();
 	let exe_path =
 		util::escape_sh_single_quoted(&ctx.exe_path.to_string_lossy());
-	let new_path_s =
-		util::escape_sh_single_quoted(&new_path.to_string_lossy());
+	let new_path_s = util::escape_sh_single_quoted(&new_path.to_string_lossy());
 
 	// Wait for the current process to exit, then atomically replace the binary
 	// and ensure it remains executable.
