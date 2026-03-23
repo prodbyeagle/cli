@@ -29,13 +29,26 @@ fn latest_release() -> anyhow::Result<GithubRelease> {
 	net::get_json::<GithubRelease>(RELEASE_API_URL)
 }
 
+fn expected_asset_name() -> &'static str {
+	if cfg!(target_os = "macos") && cfg!(target_arch = "x86_64") {
+		"eagle-x86_64-apple-darwin"
+	} else if cfg!(target_os = "macos") && cfg!(target_arch = "aarch64") {
+		"eagle-aarch64-apple-darwin"
+	} else if cfg!(target_os = "windows") {
+		"eagle.exe"
+	} else {
+		"eagle"
+	}
+}
+
 fn latest_eagle_asset(release: &GithubRelease) -> anyhow::Result<&GithubAsset> {
+	let name = expected_asset_name();
 	release
 		.assets
 		.iter()
-		.find(|asset| asset.name.eq_ignore_ascii_case("eagle"))
+		.find(|asset| asset.name.eq_ignore_ascii_case(name))
 		.ok_or_else(|| {
-			anyhow::anyhow!("Latest release does not include eagle binary")
+			anyhow::anyhow!("Latest release does not include '{}' binary", name)
 		})
 }
 
