@@ -8,7 +8,7 @@ use crate::util;
 
 fn build() -> Command {
 	Command::new("uninstall")
-		.about("Uninstall eagle.exe (Windows)")
+		.about("Uninstall eagle (macOS)")
 		.alias("rem")
 		.arg(
 			Arg::new("yes")
@@ -46,19 +46,17 @@ fn run(matches: &ArgMatches, ctx: &Context) -> anyhow::Result<()> {
 
 	let pid = std::process::id();
 	let exe_path =
-		util::escape_powershell_single_quoted(&ctx.exe_path.to_string_lossy());
+		util::escape_sh_single_quoted(&ctx.exe_path.to_string_lossy());
 
+	// Wait for the current process to exit, then remove the binary and strip
+	// the shell integration from ~/.zshrc.
 	let script = format!(
-		"Wait-Process -Id {pid} -ErrorAction SilentlyContinue; \
-if (Test-Path '{exe_path}') {{ Remove-Item -Force '{exe_path}' }}; \
-if (Test-Path $PROFILE) {{ \
-  $c = Get-Content $PROFILE; \
-  $c2 = $c | Where-Object {{ $_ -notmatch 'Set-Alias\\s+eagle' }}; \
-  Set-Content -Path $PROFILE -Value $c2 \
-}}"
+		"while kill -0 {pid} 2>/dev/null; do sleep 0.1; done; \
+rm -f '{exe_path}'; \
+if [ -f ~/.zshrc ]; then grep -v 'eagle goto' ~/.zshrc > /tmp/eagle_zshrc_tmp && mv /tmp/eagle_zshrc_tmp ~/.zshrc; fi"
 	);
 
-	util::spawn_powershell_hidden(&script)?;
+	util::spawn_shell_background(&script)?;
 
 	ui::success(
 		"Uninstall scheduled. Close this shell if eagle is still in use.",

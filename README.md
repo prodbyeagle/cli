@@ -1,16 +1,14 @@
 # eagle
 
-A lightweight Windows CLI (Rust) to automate personal workflows — project scaffolding, Minecraft server management, EagleCord, and more.
+A lightweight macOS CLI (Rust) to automate personal workflows — project scaffolding, Minecraft server management, EagleCord, and more.
 
 ## Install
 
-```powershell
-Invoke-WebRequest -UseBasicParsing `
-    https://raw.githubusercontent.com/prodbyeagle/cli/main/installer.ps1 |
-    Invoke-Expression
+```sh
+curl -fsSL https://raw.githubusercontent.com/prodbyeagle/cli/main/installer.sh | bash
 ```
 
-Installs `eagle.exe` to `C:\Scripts` and adds it to your PATH.
+Installs `eagle` to `/usr/local/bin`.
 
 ## Commands
 
@@ -23,41 +21,41 @@ Installs `eagle.exe` to `C:\Scripts` and adds it to your PATH.
 | `create`     |       | Scaffold a new project from a template           |
 | `minecraft`  |       | Start or create a Minecraft server               |
 | `eaglecord`  |       | Install or update EagleCord (Vencord fork)       |
-| `init`       |       | Install PowerShell shell integrations            |
+| `init`       |       | Install zsh shell integrations                   |
 | `help`       |       | Show help                                        |
 
 ## Shell integration
 
 Run once to enable the `g` shortcut for `goto`:
 
-```powershell
+```sh
 eagle init
 ```
 
-Then restart your shell. `g <query>` will fuzzy-search your projects and `cd` into the selected one.
+Then restart your shell or run `source ~/.zshrc`. `g <query>` will fuzzy-search your projects and `cd` into the selected one.
 
 The development root defaults to `~/Development`. Override with `--root` or `$EAGLE_DEV_ROOT`.
 
 ## Goto
 
-```powershell
+```sh
 eagle goto              # interactive fuzzy picker
-eagle goto --root D:\Projects
+eagle goto --root ~/Projects
 ```
 
 Expected structure: `<root>/<category>/<project>/`
 
 ## Create
 
-```powershell
+```sh
 eagle create
 ```
 
-Defaults to `%USERPROFILE%\Development`. Override with `--root` or `$EAGLE_CREATE_ROOT`.
+Defaults to `~/Development`. Override with `--root` or `$EAGLE_CREATE_ROOT`.
 
 ## Minecraft
 
-```powershell
+```sh
 # Interactive server picker
 eagle minecraft
 
@@ -67,7 +65,7 @@ eagle minecraft create --name my-server --type paper --version 1.21.4
 
 ## Update
 
-```powershell
+```sh
 # Pull latest release from GitHub
 eagle update
 
@@ -75,23 +73,23 @@ eagle update
 eagle update --dev
 
 # Install a specific local binary
-eagle update --dev path\to\eagle.exe
+eagle update --dev path/to/eagle
 ```
 
 ## Dev mode
 
 Debug builds automatically enable dev mode: version shows as `vX.Y.Z-dev` and each command logs timing and dispatch info to stderr.
 
-```powershell
+```sh
 cargo build           # dev mode on
 cargo build --release # dev mode off
 ```
 
 ## Development
 
-```powershell
+```sh
 cargo run -- help
-.\scripts\check.ps1
+cargo fmt && cargo clippy && cargo test
 ```
 
 ## License

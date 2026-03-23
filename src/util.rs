@@ -1,9 +1,4 @@
-#[cfg(target_os = "windows")]
-use std::os::windows::process::CommandExt;
 use std::process::{Command, ExitStatus, Stdio};
-
-#[cfg(target_os = "windows")]
-const CREATE_NO_WINDOW: u32 = 0x0800_0000;
 
 /// Runs a command inheriting stdin/stdout/stderr.
 pub fn run_inherit(program: &str, args: &[&str]) -> anyhow::Result<ExitStatus> {
@@ -78,31 +73,22 @@ pub fn levenshtein(a: &str, b: &str) -> usize {
 	dp[m][n]
 }
 
-/// Escapes a string for use inside a single-quoted PowerShell string literal.
-pub fn escape_powershell_single_quoted(value: &str) -> String {
-	value.replace('\'', "''")
+/// Escapes a string for use inside a POSIX single-quoted shell string.
+/// Single quotes cannot appear inside a single-quoted string, so the string
+/// is terminated, a literal `'` is inserted with `'\''`, then reopened.
+pub fn escape_sh_single_quoted(value: &str) -> String {
+	value.replace('\'', r"'\''")
 }
 
-/// Spawns a hidden PowerShell process that executes the given command string.
-///
-/// Uses `CREATE_NO_WINDOW` on Windows so no console window is created and
-/// the current terminal's focus is never disturbed.
-pub fn spawn_powershell_hidden(command: &str) -> anyhow::Result<()> {
-	let mut cmd = Command::new("powershell");
-	cmd.args([
-		"-NoProfile",
-		"-NonInteractive",
-		"-ExecutionPolicy",
-		"Bypass",
-		"-Command",
-		command,
-	])
-	.stdout(Stdio::null())
-	.stderr(Stdio::null());
-
-	#[cfg(target_os = "windows")]
-	cmd.creation_flags(CREATE_NO_WINDOW);
-
-	cmd.spawn()?;
+/// Spawns a detached background shell (`sh -c`) process that executes the
+/// given command string. stdout/stderr/stdin are all redirected to /dev/null
+/// so the process runs silently in the background.
+pub fn spawn_shell_background(command: &str) -> anyhow::Result<()> {
+	Command::new("sh")
+		.args(["-c", command])
+		.stdout(Stdio::null())
+		.stderr(Stdio::null())
+		.stdin(Stdio::null())
+		.spawn()?;
 	Ok(())
 }

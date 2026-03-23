@@ -43,9 +43,12 @@ fn run_impl(reinstall: bool) -> anyhow::Result<()> {
 	let repo_url = "https://github.com/prodbyeagle/cord";
 	let repo_name = "Vencord";
 
-	let appdata = std::env::var("APPDATA")
-		.map_err(|_| anyhow::anyhow!("APPDATA not set"))?;
-	let temp_root = PathBuf::from(appdata).join("EagleCord");
+	// On macOS the conventional location for app data is
+	// ~/Library/Application Support/
+	let data_dir = directories::BaseDirs::new()
+		.map(|b| b.data_dir().to_path_buf())
+		.ok_or_else(|| anyhow::anyhow!("Could not resolve data directory"))?;
+	let temp_root = data_dir.join("EagleCord");
 	let clone_dir = temp_root.join(repo_name);
 
 	std::fs::create_dir_all(&temp_root)?;
@@ -73,7 +76,7 @@ fn run_impl(reinstall: bool) -> anyhow::Result<()> {
 		std::fs::remove_dir_all(dist)?;
 	}
 
-	let discord_types = clone_dir.join(r"packages\discord-types");
+	let discord_types = clone_dir.join("packages/discord-types");
 	if discord_types.exists() {
 		ui::info("Linking @vencord/discord-types...");
 		run_bun_in_dir(&bun, &discord_types, &["link"])?;
@@ -103,55 +106,29 @@ fn ensure_bun() -> anyhow::Result<PathBuf> {
 		return Ok(path);
 	}
 
-	if which::which("winget").is_err() {
+	if which::which("brew").is_err() {
 		anyhow::bail!(
-			"bun not found and winget is unavailable. Install Bun manually."
+			"bun not found and Homebrew is unavailable. Install Bun manually: https://bun.sh"
 		);
 	}
 
-	ui::info("Bun not found. Installing with winget...");
-	let install_status = util::run_inherit(
-		"winget",
-		&[
-			"install",
-			"--id",
-			"Oven-sh.Bun",
-			"--exact",
-			"--accept-package-agreements",
-			"--accept-source-agreements",
-			"--disable-interactivity",
-		],
-	)?;
+	ui::info("Bun not found. Installing with Homebrew...");
+	let install_status =
+		util::run_inherit("brew", &["install", "oven-sh/bun/bun"])?;
 	if !install_status.success() {
-		ui::warning("Bun install did not succeed, trying winget upgrade...");
-		let upgrade_status = util::run_inherit(
-			"winget",
-			&[
-				"upgrade",
-				"--id",
-				"Oven-sh.Bun",
-				"--exact",
-				"--accept-package-agreements",
-				"--accept-source-agreements",
-				"--disable-interactivity",
-			],
-		)?;
-		if !upgrade_status.success() {
-			anyhow::bail!(
-				"Bun install/upgrade failed (install: {install_status}, upgrade: {upgrade_status})"
-			);
-		}
+		anyhow::bail!("Bun install failed (brew install: {install_status})");
 	}
 
 	if let Ok(path) = which::which("bun") {
 		return Ok(path);
 	}
 
+	// Fallback: bun installs itself to ~/.bun/bin/bun
 	let home = directories::UserDirs::new()
 		.map(|u| u.home_dir().to_path_buf())
 		.ok_or_else(|| anyhow::anyhow!("Could not resolve home dir"))?;
 
-	let fallback = home.join(r".bun\bin\bun.exe");
+	let fallback = home.join(".bun/bin/bun");
 	if fallback.exists() {
 		return Ok(fallback);
 	}
