@@ -4,7 +4,9 @@ use eagle::commands::update::is_dev_exe;
 
 #[test]
 fn dev_debug_path_detected() {
-	assert!(is_dev_exe(Path::new("/home/user/project/target/debug/eagle")));
+	assert!(is_dev_exe(Path::new(
+		"/home/user/project/target/debug/eagle"
+	)));
 }
 
 #[test]
