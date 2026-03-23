@@ -25,3 +25,31 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           files: target/x86_64-pc-windows-gnu/release/eagle.exe
+
+  macos:
+    runs-on: macos-latest
+    permissions:
+      contents: write
+    strategy:
+      matrix:
+        target:
+          - x86_64-apple-darwin
+          - aarch64-apple-darwin
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: ${{ matrix.target }}
+      - name: Build
+        run: cargo build --release --target ${{ matrix.target }}
+      - name: Rename binary
+        run: |
+          cp target/${{ matrix.target }}/release/eagle \
+             target/${{ matrix.target }}/release/eagle-${{ matrix.target }}
+      - name: Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: target/${{ matrix.target }}/release/eagle-${{ matrix.target }}
