@@ -33,15 +33,15 @@ fn latest_eagle_asset(release: &GithubRelease) -> anyhow::Result<&GithubAsset> {
 	release
 		.assets
 		.iter()
-		.find(|asset| asset.name.eq_ignore_ascii_case("eagle.exe"))
+		.find(|asset| asset.name.eq_ignore_ascii_case("eagle"))
 		.ok_or_else(|| {
-			anyhow::anyhow!("Latest release does not include eagle.exe")
+			anyhow::anyhow!("Latest release does not include eagle binary")
 		})
 }
 
 fn build() -> Command {
 	Command::new("update")
-		.about("Update eagle.exe in place (Windows)")
+		.about("Update eagle in place (macOS)")
 		.alias("u")
 		.arg(
 			Arg::new("force")
@@ -55,11 +55,11 @@ fn build() -> Command {
 				.help(
 					"Install a local dev build instead of pulling from GitHub.\n\
 					 Optionally pass the path to the binary; defaults to\n\
-					 .\\target\\debug\\eagle.exe (relative to the current directory).",
+					 ./target/debug/eagle (relative to the current directory).",
 				)
 				.num_args(0..=1)
 				.value_name("PATH")
-				.default_missing_value("target/debug/eagle.exe"),
+				.default_missing_value("target/debug/eagle"),
 		)
 }
 
@@ -87,7 +87,7 @@ fn run(matches: &ArgMatches, ctx: &Context) -> anyhow::Result<()> {
 		anyhow::anyhow!("Release asset is missing sha256 digest")
 	})?;
 
-	let new_path = ctx.exe_dir.join("eagle.new.exe");
+	let new_path = ctx.exe_dir.join("eagle.new");
 	ui::info(&format!(
 		"Updating eagle v{} → v{latest_version}",
 		ctx.version
@@ -122,7 +122,7 @@ fn run_dev_install(dev_path_str: &str, ctx: &Context) -> anyhow::Result<()> {
 		);
 	}
 
-	let new_path = ctx.exe_dir.join("eagle.new.exe");
+	let new_path = ctx.exe_dir.join("eagle.new");
 	ui::info(&format!(
 		"Installing dev build: {} → {}",
 		dev_path.display(),
@@ -141,22 +141,23 @@ fn schedule_replace(
 ) -> anyhow::Result<()> {
 	let pid = std::process::id();
 	let exe_path =
-		util::escape_powershell_single_quoted(&ctx.exe_path.to_string_lossy());
-	let new_path_s =
-		util::escape_powershell_single_quoted(&new_path.to_string_lossy());
+		util::escape_sh_single_quoted(&ctx.exe_path.to_string_lossy());
+	let new_path_s = util::escape_sh_single_quoted(&new_path.to_string_lossy());
 
+	// Wait for the current process to exit, then atomically replace the binary
+	// and ensure it remains executable.
 	let script = format!(
-		"Wait-Process -Id {pid} -ErrorAction SilentlyContinue; Start-Sleep -Milliseconds 200; \
-Move-Item -Force '{new_path_s}' '{exe_path}'"
+		"while kill -0 {pid} 2>/dev/null; do sleep 0.1; done; \
+mv -f '{new_path_s}' '{exe_path}'; chmod +x '{exe_path}'"
 	);
 
-	util::spawn_powershell_hidden(&script)
+	util::spawn_shell_background(&script)
 }
 
 #[doc(hidden)]
 pub fn is_dev_exe(path: &Path) -> bool {
 	let s = path.to_string_lossy().to_lowercase();
-	s.contains("\\target\\debug\\") || s.contains("\\target\\release\\")
+	s.contains("/target/debug/") || s.contains("/target/release/")
 }
 
 inventory::submit! {
