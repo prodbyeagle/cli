@@ -7,7 +7,15 @@ set -euo pipefail
 REPO="prodbyeagle/cli"
 INSTALL_DIR="/usr/local/bin"
 BINARY="eagle"
-RELEASE_URL="https://github.com/${REPO}/releases/latest/download/${BINARY}"
+
+# Pick the correct release asset name for this machine's architecture.
+case "$(uname -m)" in
+  arm64|aarch64) ASSET="eagle-aarch64-apple-darwin" ;;
+  x86_64)        ASSET="eagle-x86_64-apple-darwin" ;;
+  *) die "Unsupported architecture: $(uname -m)" ;;
+esac
+
+RELEASE_URL="https://github.com/${REPO}/releases/latest/download/${ASSET}"
 
 # ── helpers ────────────────────────────────────────────────────────────────────
 
