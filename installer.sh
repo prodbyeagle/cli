@@ -8,15 +8,6 @@ REPO="prodbyeagle/cli"
 INSTALL_DIR="/usr/local/bin"
 BINARY="eagle"
 
-# Pick the correct release asset name for this machine's architecture.
-case "$(uname -m)" in
-  arm64|aarch64) ASSET="eagle-aarch64-apple-darwin" ;;
-  x86_64)        ASSET="eagle-x86_64-apple-darwin" ;;
-  *) die "Unsupported architecture: $(uname -m)" ;;
-esac
-
-RELEASE_URL="https://github.com/${REPO}/releases/latest/download/${ASSET}"
-
 # ── helpers ────────────────────────────────────────────────────────────────────
 
 info()    { printf '\033[34m[info]\033[0m  %s\n' "$*"; }
@@ -30,6 +21,15 @@ die()     { printf '\033[31m[error]\033[0m %s\n' "$*" >&2; exit 1; }
 
 command -v curl >/dev/null 2>&1 || die "curl is required but not installed."
 
+# Pick the correct release asset name for this machine's architecture.
+case "$(uname -m)" in
+  arm64|aarch64) ASSET="eagle-aarch64-apple-darwin" ;;
+  x86_64)        ASSET="eagle-x86_64-apple-darwin" ;;
+  *) die "Unsupported architecture: $(uname -m)" ;;
+esac
+
+RELEASE_URL="https://github.com/${REPO}/releases/latest/download/${ASSET}"
+
 # ── dev mode: build from source ────────────────────────────────────────────────
 
 if [[ "${1:-}" == "--dev" ]]; then
@@ -38,6 +38,7 @@ if [[ "${1:-}" == "--dev" ]]; then
   cargo build --release
   src="$(pwd)/target/release/${BINARY}"
   [[ -f "$src" ]] || die "Build artifact not found: $src"
+  sudo mkdir -p "$INSTALL_DIR"
   install -m 755 "$src" "${INSTALL_DIR}/${BINARY}"
   success "Dev build installed to ${INSTALL_DIR}/${BINARY}"
   exit 0
@@ -60,6 +61,7 @@ if [[ -w "$INSTALL_DIR" ]]; then
   mv "$tmp" "${INSTALL_DIR}/${BINARY}"
 else
   info "Installing to ${INSTALL_DIR} (sudo required)..."
+  sudo mkdir -p "$INSTALL_DIR"
   sudo mv "$tmp" "${INSTALL_DIR}/${BINARY}"
 fi
 
