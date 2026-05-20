@@ -46,31 +46,30 @@ pub fn run_capture(program: &str, args: &[&str]) -> anyhow::Result<String> {
 /// Returns the Levenshtein edit distance between two strings.
 #[allow(clippy::indexing_slicing)]
 // JUSTIFICATION: All indices are mathematically bounded by construction.
-// `dp` is (m+1)×(n+1), loops run 1..=m and 1..=n, so dp[i][j], dp[i-1][j-1],
-// dp[i-1][j], dp[i][j-1] are always in range. `a[i-1]` and `b[j-1]` are safe
-// because i ∈ 1..=m=a.len() and j ∈ 1..=n=b.len().
+// `previous` and `current` are n+1 wide, loops run 1..=m and 1..=n, so
+// current[j], previous[j], previous[j-1], current[j-1], a[i-1], and b[j-1]
+// are always in range.
 pub fn levenshtein(a: &str, b: &str) -> usize {
 	let a: Vec<char> = a.chars().collect();
 	let b: Vec<char> = b.chars().collect();
 	let m = a.len();
 	let n = b.len();
-	let mut dp = vec![vec![0usize; n + 1]; m + 1];
-	for (i, row) in dp.iter_mut().enumerate() {
-		row[0] = i;
-	}
-	for (j, cell) in dp[0].iter_mut().enumerate() {
-		*cell = j;
-	}
+	let mut previous: Vec<usize> = (0..=n).collect();
+	let mut current = vec![0usize; n + 1];
+
 	for i in 1..=m {
+		current[0] = i;
 		for j in 1..=n {
-			dp[i][j] = if a[i - 1] == b[j - 1] {
-				dp[i - 1][j - 1]
+			current[j] = if a[i - 1] == b[j - 1] {
+				previous[j - 1]
 			} else {
-				1 + dp[i - 1][j - 1].min(dp[i - 1][j]).min(dp[i][j - 1])
+				1 + previous[j - 1].min(previous[j]).min(current[j - 1])
 			};
 		}
+		std::mem::swap(&mut previous, &mut current);
 	}
-	dp[m][n]
+
+	previous[n]
 }
 
 /// Escapes a string for use inside a POSIX single-quoted shell string.

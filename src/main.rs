@@ -40,8 +40,7 @@ fn run() -> anyhow::Result<()> {
 	}
 
 	for spec in eagle::commands::iter_specs() {
-		let sub = (spec.command)();
-		if sub.get_name() == sub_name {
+		if spec.name == sub_name {
 			let t0 = std::time::Instant::now();
 			let result = (spec.run)(sub_matches, &ctx);
 			if ctx.dev_mode {
@@ -54,16 +53,7 @@ fn run() -> anyhow::Result<()> {
 		}
 	}
 
-	let suggestion = cmd
-		.get_subcommands()
-		.flat_map(|sub| {
-			let name = sub.get_name().to_string();
-			let aliases: Vec<String> =
-				sub.get_all_aliases().map(|a| a.to_string()).collect();
-			std::iter::once(name).chain(aliases)
-		})
-		.filter(|candidate| eagle::util::levenshtein(sub_name, candidate) <= 3)
-		.min_by_key(|candidate| eagle::util::levenshtein(sub_name, candidate));
+	let suggestion = closest_command_name(&cmd, sub_name);
 
 	let msg = match suggestion {
 		Some(s) => {
@@ -73,4 +63,44 @@ fn run() -> anyhow::Result<()> {
 	};
 
 	Err(cmd.error(ErrorKind::InvalidSubcommand, msg).into())
+}
+
+fn closest_command_name<'a>(
+	cmd: &'a clap::Command,
+	sub_name: &str,
+) -> Option<&'a str> {
+	let mut closest = None;
+	let mut closest_distance = usize::MAX;
+
+	for sub in cmd.get_subcommands() {
+		track_candidate(
+			sub_name,
+			sub.get_name(),
+			&mut closest,
+			&mut closest_distance,
+		);
+		for alias in sub.get_all_aliases() {
+			track_candidate(
+				sub_name,
+				alias,
+				&mut closest,
+				&mut closest_distance,
+			);
+		}
+	}
+
+	if closest_distance <= 3 { closest } else { None }
+}
+
+fn track_candidate<'a>(
+	sub_name: &str,
+	candidate: &'a str,
+	closest: &mut Option<&'a str>,
+	closest_distance: &mut usize,
+) {
+	let distance = eagle::util::levenshtein(sub_name, candidate);
+	if distance < *closest_distance {
+		*closest = Some(candidate);
+		*closest_distance = distance;
+	}
 }

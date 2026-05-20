@@ -171,6 +171,7 @@ fn current_two_digit_year() -> anyhow::Result<String> {
 
 inventory::submit! {
 	CommandSpec {
+		name: "create",
 		command: build,
 		run,
 	}

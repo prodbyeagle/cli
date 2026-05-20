@@ -30,16 +30,13 @@ fn run(matches: &ArgMatches, _: &Context) -> anyhow::Result<()> {
 }
 
 fn find_subcommand(cli: &mut Command, name_or_alias: &str) -> Option<Command> {
-	let needle = name_or_alias.to_lowercase();
-
 	for sub in cli.get_subcommands_mut() {
-		let name = sub.get_name().to_string().to_lowercase();
-		if name == needle {
+		if sub.get_name().eq_ignore_ascii_case(name_or_alias) {
 			return Some(sub.clone());
 		}
 
 		for alias in sub.get_all_aliases() {
-			if alias.to_string().to_lowercase() == needle {
+			if alias.eq_ignore_ascii_case(name_or_alias) {
 				return Some(sub.clone());
 			}
 		}
@@ -50,6 +47,7 @@ fn find_subcommand(cli: &mut Command, name_or_alias: &str) -> Option<Command> {
 
 inventory::submit! {
 	CommandSpec {
+		name: "help",
 		command: build,
 		run,
 	}

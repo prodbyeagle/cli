@@ -17,33 +17,10 @@ Installs `eagle` to `/usr/local/bin`.
 | `version`    | `v`   | Show current version                             |
 | `update`     | `u`   | Update eagle in place from GitHub                |
 | `uninstall`  | `rem` | Remove eagle from the system                     |
-| `goto`       | `g`   | Fuzzy-jump to a project directory                |
 | `create`     |       | Scaffold a new project from a template           |
 | `minecraft`  |       | Start or create a Minecraft server               |
 | `eaglecord`  |       | Install or update EagleCord (Vencord fork)       |
-| `init`       |       | Install zsh shell integrations                   |
 | `help`       |       | Show help                                        |
-
-## Shell integration
-
-Run once to enable the `g` shortcut for `goto`:
-
-```sh
-eagle init
-```
-
-Then restart your shell or run `source ~/.zshrc`. `g <query>` will fuzzy-search your projects and `cd` into the selected one.
-
-The development root defaults to `~/Development`. Override with `--root` or `$EAGLE_DEV_ROOT`.
-
-## Goto
-
-```sh
-eagle goto              # interactive fuzzy picker
-eagle goto --root ~/Projects
-```
-
-Expected structure: `<root>/<category>/<project>/`
 
 ## Create
 

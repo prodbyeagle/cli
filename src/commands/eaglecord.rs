@@ -194,6 +194,7 @@ fn run_bun_in_dir(bun: &Path, dir: &Path, args: &[&str]) -> anyhow::Result<()> {
 
 inventory::submit! {
 	CommandSpec {
+		name: "eaglecord",
 		command: build,
 		run,
 	}
@@ -201,6 +202,7 @@ inventory::submit! {
 
 inventory::submit! {
 	CommandSpec {
+		name: "eaglecord-dev",
 		command: build_dev,
 		run: run_dev,
 	}
