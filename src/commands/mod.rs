@@ -3,6 +3,7 @@ use clap::{ArgMatches, Command};
 use crate::context::Context;
 
 pub struct CommandSpec {
+	pub name: &'static str,
 	pub command: fn() -> Command,
 	pub run: fn(&ArgMatches, &Context) -> anyhow::Result<()>,
 }
@@ -15,9 +16,7 @@ pub fn iter_specs() -> inventory::iter<CommandSpec> {
 
 pub mod create;
 pub mod eaglecord;
-pub mod goto;
 pub mod help;
-pub mod init;
 pub mod minecraft;
 pub mod uninstall;
 pub mod update;

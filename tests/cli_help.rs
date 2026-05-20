@@ -44,6 +44,15 @@ fn update_help_succeeds() {
 }
 
 #[test]
+fn removed_commands_fail() {
+	let mut goto_cmd = cargo_bin_cmd!("eagle");
+	goto_cmd.arg("goto").assert().failure();
+
+	let mut init_cmd = cargo_bin_cmd!("eagle");
+	init_cmd.arg("init").assert().failure();
+}
+
+#[test]
 fn minecraft_help_shows_ram_flag() {
 	let mut cmd = cargo_bin_cmd!("eagle");
 	cmd.args(["minecraft", "--help"])

@@ -175,6 +175,7 @@ pub fn is_dev_exe(path: &Path) -> bool {
 
 inventory::submit! {
 	CommandSpec {
+		name: "update",
 		command: build,
 		run,
 	}

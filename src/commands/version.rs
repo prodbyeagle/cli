@@ -18,6 +18,7 @@ fn run(_: &ArgMatches, ctx: &Context) -> anyhow::Result<()> {
 
 inventory::submit! {
 	CommandSpec {
+		name: "version",
 		command: build,
 		run,
 	}

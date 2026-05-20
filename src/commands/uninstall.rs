@@ -48,12 +48,10 @@ fn run(matches: &ArgMatches, ctx: &Context) -> anyhow::Result<()> {
 	let exe_path =
 		util::escape_sh_single_quoted(&ctx.exe_path.to_string_lossy());
 
-	// Wait for the current process to exit, then remove the binary and strip
-	// the shell integration from ~/.zshrc.
+	// Wait for the current process to exit, then remove the binary.
 	let script = format!(
 		"while kill -0 {pid} 2>/dev/null; do sleep 0.1; done; \
-rm -f '{exe_path}'; \
-if [ -f ~/.zshrc ]; then grep -v 'eagle goto' ~/.zshrc > /tmp/eagle_zshrc_tmp && mv /tmp/eagle_zshrc_tmp ~/.zshrc; fi"
+rm -f '{exe_path}'"
 	);
 
 	util::spawn_shell_background(&script)?;
@@ -66,6 +64,7 @@ if [ -f ~/.zshrc ]; then grep -v 'eagle goto' ~/.zshrc > /tmp/eagle_zshrc_tmp &&
 
 inventory::submit! {
 	CommandSpec {
+		name: "uninstall",
 		command: build,
 		run,
 	}

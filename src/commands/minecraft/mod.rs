@@ -35,6 +35,7 @@ fn run(matches: &ArgMatches, _: &Context) -> anyhow::Result<()> {
 
 inventory::submit! {
 	CommandSpec {
+		name: "minecraft",
 		command: build,
 		run,
 	}
